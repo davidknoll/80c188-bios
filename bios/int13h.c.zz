@@ -1,0 +1,233 @@
+/* Interrupt 13h
+ * BIOS disk services
+ */
+#include <stdlib.h>
+#include "bios.h"
+#include "ff.h"
+
+// FatFs
+static FATFS sdcard;
+static FIL dskimg[2];
+
+static unsigned char dstat[2];			// Save last status for each "drive"
+static unsigned char dchange[2];		// Change line flag
+static const unsigned char *ddpt[2];	// Current DDPT
+
+// Diskette Drive Parameter Tables (DDPT)
+// These don't have everything filled, just what I can see from RBIL & Wiki
+// 8" 250KB, 77 cyl * 1 hd * 26 spt * 128 bps
+const unsigned char ddpt250[] = {
+	0x00, 0x00, 0x00, 0x00,
+	  26, 0x2A, 0x00, 0x50,
+	0xF6, 0x00, 0x00,
+	  77,    1, 0x00	// Cyls, heads, CMOS type, not part of standard DDPT
+};
+// 5 1/4" 360KB, 40 cyl * 2 hd * 9 spt * 512 bps
+const unsigned char ddpt360[] = {
+	0x00, 0x00, 0x00, 0x02,
+	   9, 0x2A, 0x00, 0x50,
+	0xF6, 0x00, 0x00,
+	  40,    2, 0x01
+};
+// 3 1/2" 720KB, 80 cyl * 2 hd * 9 spt * 512 bps
+const unsigned char ddpt720[] = {
+	0x00, 0x00, 0x00, 0x02,
+	   9, 0x1B, 0x00, 0x6C,
+	0xF6, 0x00, 0x00,
+	  80,    2, 0x03
+};
+// 3 1/2" 1.44MB, 80 cyl * 2 hd * 18 spt * 512 bps
+const unsigned char ddpt1440[] = {
+	0x00, 0x00, 0x00, 0x02,
+	  18, 0x1B, 0x00, 0x6C,
+	0xF6, 0x00, 0x00,
+	  80,    2, 0x04
+};
+
+void interrupt int13h(struct pregs r)
+{
+	UINT bread;			// For FatFs to store number of bytes read/written
+	DWORD imgoffset;	// Byte offset within image file
+	UINT imgbcnt;		// Byte count to read/write
+
+	// Parameters
+	unsigned int secct = r.ax & 0xFF;
+	unsigned int cyl = ((r.cx & 0xC0) << 2) | (r.cx >> 8);
+	unsigned int sec = r.cx & 0x3F;
+	unsigned int hd = r.dx >> 8;
+	unsigned int drv = r.dx & 0xFF;
+	void far *secbuf = (void far *) ((((unsigned long) r.es) << 16) | r.bx);
+
+	if (ddpt[drv] != NULL) {
+		imgoffset =
+			((((cyl * ddpt[drv][0x0C]) + hd) * ddpt[drv][0x04]) + (sec - 1)) *
+			(128UL << ddpt[drv][0x03]);
+		imgbcnt = secct * (128 << ddpt[drv][0x03]);
+	}
+
+	// Return now if invalid drive
+	if (drv > 1) {
+		r.ax &= 0xFF;
+		r.ax |= 0x0100;	// Invalid command / parameter
+		r.flags |= F_C;	// Carry set on error
+		return;
+	}
+
+	switch (r.ax >> 8) {	// Function number in AH
+
+	case 0x00:	// Reset disk system
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }	// Not ready
+		dstat[drv] = 0x00;		// Success
+		break;
+
+	case 0x01:	// Get status of last operation
+		break;
+
+	case 0x02:	// Read sector(s)
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		if (dchange[drv]) { dstat[drv] = 0x06; dchange[drv] = 0; break; }	// Change line active
+		if (f_lseek(&dskimg[drv], imgoffset) != FR_OK) {
+			dstat[drv] = 0x40;	// Seek failure
+			r.ax = 0;			// AL = number of sectors read
+			break;
+		}
+
+		if (f_read(&dskimg[drv], secbuf, imgbcnt, &bread) != FR_OK) {
+			dstat[drv] = 0x04;	// Sector not found
+			r.ax = bread / (128 << ddpt[drv][0x03]);
+			break;
+		}
+		if (bread != secct * (128 << ddpt[drv][0x03])) {
+			dstat[drv] = 0x04;
+			r.ax = bread / (128 << ddpt[drv][0x03]);
+			break;
+		}
+		dstat[drv] = 0x00;
+		r.ax = bread / (128 << ddpt[drv][0x03]);
+		break;
+
+	case 0x03:	// Write sector(s)
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		if (dchange[drv]) { dstat[drv] = 0x06; dchange[drv] = 0; break; }
+		dstat[drv] = 0x03;		// Write protected
+		r.ax = 0;				// AL = number of sectors written
+		break;
+
+	case 0x04:	// Verify sector(s)
+		// This function doesn't verify against memory, only that the
+		// sector(s) can be found and read and have the correct CRC.
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		if (dchange[drv]) { dstat[drv] = 0x06; dchange[drv] = 0; break; }
+		dstat[drv] = 0x00;		// Fake it, AL = number of sectors verified
+		break;
+
+	case 0x05:	// Format track
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		if (dchange[drv]) { dstat[drv] = 0x06; dchange[drv] = 0; break; }
+		dstat[drv] = 0x03;
+		break;
+
+	// Functions 06-07h are for fixed disks only
+
+	case 0x08:	// Get current drive parameters
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		dstat[drv] = 0x00;
+		r.ax = 0;
+		r.bx = ddpt[drv][0x0D];									// CMOS drive type
+		r.cx = ((ddpt[drv][0x0B] - 1) << 8) | ddpt[drv][0x04];	// Max cyl & sec
+		r.dx = ((ddpt[drv][0x0C] - 1) << 8) | 0x02;				// Max head, num of drives
+		r.es = ((unsigned long) ddpt[drv]) >> 16;				// Pointer to DDPT
+		r.di = ((unsigned long) ddpt[drv]) & 0xFFFF;
+		break;
+
+	// Functions 09-14h are for fixed disks only
+
+	case 0x15:	// Read DASD type
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		r.ax &= 0xFF;			// AH = type, floppy with changeline
+		r.ax |= 0x0200;
+		r.cx = 0;				// CX:DX = number of sectors
+		r.dx = ddpt[drv][0x0B] * ddpt[drv][0x0C] * ddpt[drv][0x04];
+		dstat[drv] = 0x00;		// Success, but we're not returning 0 in AH
+		r.flags &= ~F_C;
+		return;
+
+	case 0x16:	// Change line status
+		if (ddpt[drv] == NULL) { dstat[drv] = 0x80; break; }
+		if (dchange[drv]) { dstat[drv] = 0x06; dchange[drv] = 0; break; }
+		dstat[drv] = 0x00;
+		break;
+
+	case 0x17:	// Set DASD type for format
+		dstat[drv] = 0x00;
+		switch (r.ax & 0xFF) {
+		case 0x01:
+		case 0x02: ddpt[drv] = ddpt360; break;
+		case 0x04: ddpt[drv] = ddpt720; break;
+		default: dstat[drv] = 0x0C;
+		}
+		break;
+
+	case 0x18:	// Set media type for format
+		dstat[drv] = 0x00;
+		if (cyl == 77 - 1 && sec == 26) { ddpt[drv] = ddpt250; }
+		else if (cyl == 40 - 1 && sec == 9) { ddpt[drv] = ddpt360; }
+		else if (cyl == 80 - 1 && sec == 9) { ddpt[drv] = ddpt720; }
+		else if (cyl == 80 - 1 && sec == 18) { ddpt[drv] = ddpt1440; }
+		else { dstat[drv] = 0x0C; }
+		r.es = ((unsigned long) ddpt[drv]) >> 16;
+		r.di = ((unsigned long) ddpt[drv]) & 0xFFFF;
+		break;
+
+	// Functions above 18h are for fixed disks and various extensions
+	// Functions below are specific to my implementation
+
+	case 0x60:	// Mount SD card
+		dchange[drv] = 1;
+		switch (f_mount(&sdcard, "", 1)) {
+		case FR_OK: dstat[drv] = 0x00; break;				// OK
+		case FR_INVALID_DRIVE: dstat[drv] = 0x01; break;	// Invalid command / parameter
+		case FR_DISK_ERR: dstat[drv] = 0x04; break;			// Sector not found / read error
+		case FR_NOT_READY: dstat[drv] = 0x80; break;		// Not ready
+		case FR_NO_FILESYSTEM: dstat[drv] = 0x0C; break;	// Unsupported track / invalid media
+		default: dstat[drv] = 0x01; break;					// Invalid command / parameter
+		}
+		break;
+
+	case 0x61:	// Mount disk image to virtual drive
+		dchange[drv] = 1;
+		if (f_open(&dskimg[drv], secbuf, FA_READ | FA_OPEN_EXISTING) != FR_OK) {
+			ddpt[drv] = NULL;
+			dstat[drv] = 0x80;
+			break;
+		}
+		dstat[drv] = 0x00;		// Success
+
+		switch (f_size(&dskimg[drv])) {
+		case 77 * 1 * 26 * 128UL: ddpt[drv] = ddpt250; break;
+		case 40 * 2 *  9 * 512UL: ddpt[drv] = ddpt360; break;
+		case 80 * 2 *  9 * 512UL: ddpt[drv] = ddpt720; break;
+		case 80 * 2 * 18 * 512UL: ddpt[drv] = ddpt1440; break;
+		default:				// Unsupported image size
+			f_close(&dskimg[drv]);
+			ddpt[drv] = NULL;
+			dstat[drv] = 0x0C;
+		}
+		break;
+
+	case 0x62:	// Unmount disk image from virtual drive
+		dchange[drv] = 1;
+		if (f_close(&dskimg[drv]) != FR_OK) { dstat[drv] = 0x04; break; }
+		ddpt[drv] = NULL;
+		dstat[drv] = 0x00;
+		break;
+
+	default:
+		dstat[drv] = 0x01;		// Invalid command / parameter
+	}
+
+	// Return with status in AH and carry set on error
+	r.ax &= 0xFF;
+	r.ax |= dstat[drv] << 8;
+	if (dstat[drv]) { r.flags |= F_C; } else { r.flags &= ~F_C; }
+}

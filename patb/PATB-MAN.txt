@@ -1,0 +1,604 @@
+
+
+                             8086 TINY BASIC USER'S GUIDE
+                             MTM Scientific, Inc Ver. 1.2
+
+                                     INTRODUCTION
+
+	Note:	This version of TINY BASIC was created from a modified version
+	of a modified version of Palo Alto Tiny Basic, as originally published
+	in Dr. Dobb's Journal.  Originally written for the 8080 CPU, the code
+	was modified by Michael Sullivan to run on an 8086 CPU. Sullivan states
+	that the code was modifed by unknown persons before he received it. The
+	code was subsequently modified by MTM Scientific, Inc to enable running
+	directly from ROM, without using DOS interrupts. (MTM November, 2013)
+
+ 	      The TINY BASIC language originated in the pages  of  Dr.  DOBB'S
+        JOURNAL and PEOPLE'S COMPUTER COMPANY in late 1975 and early 1976. Fed
+        by  the  enthusiasm  of early computer hobbyists and by the challenges
+        and oportunities created by the early microcomputer chips, the idea of
+        a tiny basic interpreter quickly gained popularity and acceptance. The
+        language was a stripped down version  of  the  ever-popular  Dartmouth
+        BASIC with the proviso that it be "useful" with a minimum of then very
+        expensive  memory.  Additionally,  TINY  BASIC had to be ROMable since
+        mass storage at that time consisted of reels of teletype  punch  paper
+        tape,  often punched at the unbearably slow rate of ten characters per
+        second.  
+
+              The TINY BASIC language supports a very limited  subset  of  the
+        Dartmouth  BASIC  language.  It does not compare at all with the large
+        floating point BASIC's that have been released for  almost  all  eight
+        bit  microcomputer  chips. It does not support strings. Then, why 8086
+        TINY BASIC? Well,  the  size  is  still  small  (2700  bytes),  it  is
+        efficient  and  easy  to  learn,  and it is still ROMable. All of this
+        implies that the language is still useful in at  least  two  important
+        applications: education and dedicated control.  
+
+              The present version of TINY BASIC is  based  on  Li-Chen  Wang's
+        Palo  Alto  8080  TINY BASIC as published in the May 1976 issue of DR.
+        DOBB'S JOURNAL.  Dr. Wang's version of TINY BASIC was chosen  for  its
+        remarkable  resiliance  and simplicity.  It has been optimized for the
+        8086 and it takes advantage of the hardware multiply and  divide  that
+        the  8086  affords.  Other  enhancements  include  the use of the host
+        operating system's line editing  facilities  and  the  LOAD  and  SAVE
+        facilities,  which,  in  the 8080 version, are due to unknown authors.
+        The 8086 implementation is due to Michael  E.  Sullivan  of  Financial
+        Software, 54 Grove Street, Haddonfield, NJ, 08033.  
+
+
+
+
+                                     THE LANGUAGE
+
+
+        Numbers 
+
+              In TINY BASIC, all number are integers and must  be  within  the
+        range of -32767 .. 32767.  
+
+
+
+        Variables 
+
+              There are 26 scalar variables donoted by the letters  A  through
+        Z.  The  one  array  variable  is  denoted by '@(I)'. Its dimension is
+        limited by the size of the TINY BASIC program. See the description  of
+        the SIZE function.  
+
+
+        Functions 
+
+              There are five functions in TINY BASIC.  
+
+               ABS(X) - Returns the absolute vaulue of the variable X.
+        
+               INP(X) - Returns data read from input port X. (0<=X<=255)
+        
+               PEEK(X)- Returns the contents of memory location X. (-32767<=X<=32767)
+        
+               RND(X) - Returns a random number between 1 and X (inclusive).
+        
+               SIZE   - Returns the number of bytes left unused by the program.
+        
+
+
+        Arithmetic and Comparison Operators 
+
+              The following operators are supported:  
+
+               /   - integer divide (fractional results not returned)
+        
+               *   - integer multiply
+        
+               -   - subtract
+        
+               +   - add
+        
+               >   - compare if greater than
+        
+               <   - compare if less than
+        
+               =   - compare if equal to
+                       NOTE: multiple assignment statements are not supported,
+                             i.e., "LET A=B=O" is interpreted by TINY BASIC as
+                             meaning "set A to the result of comparing B with O".
+        
+               #   - compare if not equal to
+        
+               >=  - compare if greater than or equal to
+        
+               <=  - compare if less than or equal to
+        
+
+        The +,-,*, and / operations return a value within the range -32767  ..
+        32767.  TINY BASIC works exclusively with decimal numbers. In order to
+        represent  the  full  range  of  numbers  between  0  and  0FFFFH  the
+        properties of two's complement arithemtic should  be  understood.  For
+        example,  in order to PEEK at memory location 0FFFFH, the parameter -0
+        should be used as the PEEK function argument.  Notice  that  the  PEEK
+        operation  (as  well  as  other address referenced operations) are all
+        relative to the current data segment, which should be the same as  the
+        code segment.  
+
+              All compare operations result in a 1 if the comparison  is  true
+        and a 0 if it is false.  
+
+
+        Expressions 
+
+              Expressions are formed with numbers,  variables,  and  functions
+        with  arithmetic and compare operators between them. + and - signs can
+        also be used at the beginning  of  an  expression.  The  value  of  an
+        expression  is  evaluated  from left to right, except that the * and /
+        operators are always given precedence, with +  and  -,  and  then  the
+        compare  operators  following, in that order.  Parentheses can be used
+        to alter the order of evaluation in the standard algabraic sense.  
+
+
+        Statements 
+
+              A TINY BASIC statement consists of a statement number between  1
+        and  32767  followed  by  one  or  more commands (see Commands below).
+        Commands in the same statement are seperated by  a  semi-colon  ";".If
+        the  "GOTO",  "STOP", and "RETURN" commands are used then they must be
+        the last command in that statement.  
+
+
+        Program 
+
+              A TINY BASIC program consists of one or  more  statements.  When
+        the  direct  command  (see Direct Commands below) "RUN" is issued, the
+        statement with the lowest statement number is executed first, then the
+        one with the next lowest statement number, etc. The  "GOTO",  "GOSUB",
+        "STOP",  and  "RETURN" commands can alter this normal sequence. Within
+        any statement the execution takes place from left to right.  The  "IF"
+        command  can  cause remaining commands within the same statement to be
+        skipped.  
+
+
+        Abbreviations and Blanks 
+
+
+              TINY BASIC statements and commands may use blanks freely, except
+        that numbers, command key words,  and  function  names  may  not  have
+        embedded blanks.  
+
+              All TINY BASIC command key  words  and  function  names  may  be
+        abbreviated  by following the abbreviation with a period. For example,
+        "PR.", "PRI.", and "PRIN." all stand for  "PRINT". The word  "LET"  in
+        the LET command may be ommited.
+
+
+
+        Editor 
+
+
+              TINY BASIC contains  a  useful  text  editor  for  entering  and
+        correcting  TINY  BASIC  programs. All of the line editing features of
+        the host operating system are used. In order to  correct  an  existing
+        TINY  BASIC  statement,  that statement must be re-entered. Statements
+        may be deleted by simply typing their statement number, followed by  a
+        CR.  Corrections  may be verified by typing LIST nnnn and striking the
+        control-X key to terminate the LIST process.  
+
+
+
+
+                                    ERROR MESSAGES
+
+
+              There are only three error messages in TINY BASIC. When an error
+        is encountered the error message itself is printed,  followed  by  the
+        statement  causing  the program error with a "?" inserted at the point
+        where the error is detected.  Control is then passed to the TINY BASIC
+        monitor. A synopsis of the three error conditions follow.  
+
+
+        -- WHAT?
+        
+               WHAT?
+               210 P?TINT "THIS"
+
+              WHAT? indicates that TINY BASIC did not understand the statement
+        or command.  In the example above, the command PRINT was  mistyped  on
+        statement number 210.  
+
+
+        -- HOW?
+        
+               HOW?
+               260 LET A=32000+5000?
+
+              HOW? indicates that TINY BASIC understands  but  cannot  execute
+        the statement or command. In the example above, the sum of the numbers
+        exceeds 32767.  
+
+
+        -- SORRY
+        
+               SORRY
+
+              SORRY indicates that TINY BASIC understand  but  cannot  execute
+        the  statement  or  command due to insufficient memory. One cure is to
+        rephrase the TINY BASIC program in acceptable abbreviations.
+
+
+
+
+                                  STATEMENT COMMANDS
+
+
+              TINY BASIC statement commands are listed  below  with  examples.
+        Remember  that commands can be concatenated with semi-colons. In order
+        to store any given statement, you must precede that statement  with  a
+        statement number between 1 and 32767.  Statement numbers are NOT shown
+        in the examples.  
+
+
+        LET command 
+
+               LET A=234-5*6;A=A/2;X=A-100;@(X+9)=A-1
+
+              The LET command assigns  the  value  of  an  expression  to  the
+        specified  variable.    In the example above, the variable "A" assumes
+        the value of the expression "234-5*6", or "204". Then the variable "A"
+        assumes the value "102". Next, the variable "X" is set to the value of
+        the expression "A-100", or "2".  The last command  assigns  the  value
+        "101"  to  the  array  variable "@(11)".  The "LET" portion of the LET
+        command is optional, i.e., the following examples are true:  
+        
+               A=10
+               C=5*3/5;C=C*5
+
+
+        REM Command 
+
+               REM ANYTHING CAN BE WRITTEN AFTER "REM"
+
+              The REM command  is  ignored  by  TINY  BASIC.  It  is  used  by
+        experienced  programmers  to comment BASIC programs. A program comment
+        is used by programmers to remind themselves of the logic of a  program
+        section. All good programs are invariably commented.  
+
+
+        PRINT Command 
+
+               PRINT 
+
+              PRINT will cause a carriage-return (CR) and a line-feed (LF)  on
+        the output device.  
+
+               PRINT A*3+1,"ABC" 
+
+              This form of the PRINT command  will  print  the  value  of  the
+        expression  A*3+1  on the output device, followed by the string ABC on
+        the same line.  Note that single (') or double quotes (") may be  used
+        to denote character strings, but that pairs must be mached.  
+
+               PRINT A*3+1,"ABC", 
+
+              This form of the PRINT command will produce the same results  as
+        the  previous example except that the normal CR-LF is inhibited by the
+        trailing comma at the end of the statement. This  allows  other  PRINT
+        commands to print on the same line.  
+
+               PRINT A,B,#3,C,D,E,#10,F,G 
+
+              This form of the PRINT command demonstrates format control.  The
+        format character # is used to indicate the number of leading spaces to
+        be printed before a number. The default number is 6. Once the # format
+        is  invoked  it  is  active  for the remainder of the statement unless
+        overridden by a subsequent format specifier, as in the example.  
+
+               PRINT 'ABC',\,'XXX' 
+
+              The back-slash (\) character is used to cause a CR without a LF.
+        In  this example, the string ABC is printed followed by the string XXX
+        on top of the original ABC.  
+
+
+        INPUT Command 
+
+
+               INPUT A,B 
+
+              The INPUT statement is used to acquire input data during program
+        execution.  In the example above, TINY BASIC will print  A:  and  wait
+        for  a  number  to  be typed at the console terminal. Next, TINY BASIC
+        will print B: and wait for another number to be typed at  the  console
+        terminal. In this example the variables A and B will assume the values
+        of  the  appropiate  input  values.    The INPUT statement will accept
+        expressions as well as numbers as input.  
+
+               INPUT 'WHAT IS THE WEIGHT'A,"AND SIZE"B 
+
+              In this example TINY BASIC will print the  string  WHAT  IS  THE
+        WEIGHT:  and  wait for operator input. Next, the string AND SIZE: will
+        be printed, on the same line, and TINY BASIC will  wait  for  operator
+        input.  
+
+               INPUT A,'STRING',\,"ANOTHER STRING",B 
+
+              TINY BASIC will react to the back-slash character  (\)  in  this
+        example in the same fashion as in the PRINT command. The second string
+        will overwrite the first string STRING.  
+
+
+        IF Command 
+
+               IF A<B LET X=3;PRINT 'THIS STRING' 
+
+              The IF command works with the comparison  operators  (enumerated
+        above) to check the validity of the specified comparison condition. In
+        this  example,  if the comparison A<B is true, then the balance of the
+        commands in the statement are executed.  However,  if  the  comparison
+        tests false, then the balance of the commands in the statement are NOT
+        executed  and  control  passes  to the statement with the next highest
+        statement number.
+
+
+               IF A<B GOTO 100 
+
+              This example illustrates a common use of the IF command and  the
+        GOTO  (see  below)  command.  If  the comparison tests true control is
+        passed to statement number 100,  otherwise  execution  passes  to  the
+        statement with the next highest statement number.  
+
+
+        GOTO Command 
+
+               GOTO 120 
+
+              This  statement  is  used  to  modify  the  normal  sequence  of
+        execution of TINY BASIC statements. In this example, control is passed
+        unconditionally  to  statement  number 120. The GOTO command cannot be
+        followed by a semi-colon and other commands within the same statement.
+        It must appear as the last command in any given statement.  
+
+               GOTO A*10+B 
+
+              This form of the GOTO is called a "computed GOTO". In this case,
+        control   is  passed  to  the  statement  number  represented  by  the
+        expression that follows "GOTO".  
+
+
+        GOSUB Command 
+
+               GOSUB 120 
+
+              The GOSUB  command  is  used  to  invoke  a  subroutine  at  the
+        specified  statement number (120 in the example). Control is passed to
+        statement number 120 and execution continues. A  RETURN  command  (see
+        below)  is  used,  within  the subroutine, to cause TINY BASIC to pass
+        control to the statement that immediatly  follows  the  GOSUB  command
+        that  caused  the  subroutine to execute.  The GOSUB command cannot be
+        followed by any other commands within the same statement and  it  must
+        be  the last command within any given statement. GOSUB commands can be
+        nested, limited by the size of the stack space (see below).  
+
+               GOSUB A*10+B 
+
+              In this example, the subroutine at the statement number equal to
+        the value of the expression is executed. This form  of  the  statement
+        will  cause  a  different subroutine to be executed depending upon the
+        value of the expression that follows "GOSUB".  
+
+
+        RETURN Command 
+
+               RETURN 
+
+              The RETURN command causes execution to resume at  the  statement
+        that  follows  the  GOSUB  that  caused  the  current subroutine to be
+        executed. It must be the last command of any given statement.
+
+
+        FOR Command 
+
+               FOR X=1 TO 10
+               PRINT 'HELLO'
+               NEXT X
+
+              The FOR command is used to set up execution loops. In  the  TINY
+        BASIC program segment above the statement PRINT 'HELLO' is executed 10
+        times  since  it  is  placed  between  the  FOR statement and the NEXT
+        statement. The  NEXT  X  statement  (see  below)  has  the  effect  of
+        incrementing X by one and passing control to the FOR statement. If the
+        new  value  of  X  is  still  less than or equal to 10, the TINY BASIC
+        statements between FOR and  NEXT  are  executed  again.  This  process
+        repeats  until X is incremented past the loop termination value (10 in
+        the example above).  
+
+               FOR X=1 TO 10 STEP 2
+               PRINT 'HELLO'
+               NEXT X
+
+              In the above variant of the FOR command the loop  increment  has
+        been changed from 1 (the default) to 2 by means of the STEP clause. In
+        this  case,  the program fragment would only print HELLO five times if
+        executed.  
+
+              FOR commands can be nested, that is, one FOR  loop  can  contain
+        other  FOR  loops  provided that the loop variables (the variable X in
+        the examples) are diferent,.  If a new FOR command with the same  loop
+        variable  as  that  of  an old FOR command is encountered, the old FOR
+        will be terminated.  
+
+
+        NEXT Command 
+
+               NEXT X 
+
+              The NEXT command is part of the FOR command and is used to cause
+        loop variables to be incremented by the  increment  specified  by  the
+        STEP  clause (default is 1) and to pass control to the appropiate TINY
+        BASIC FOR loop. The variable specified by the NEXT command (X  in  the
+        example) is used to specify the correct FOR loop.  
+
+
+        POKE Command 
+
+               POKE A,B 
+
+              The POKE command is used to place data B into memory address  A.
+        This command may be repeated as follows:  
+
+               POKE A,B,C,D 
+
+        In the above example, data B is placed in memory location A, then data
+        D is placed in memory location C. All variables may be expressions. Be
+        careful not to POKE TINY BASIC itself!  
+
+
+        USR Command 
+
+               USR(I,J) 
+
+              The USR Command is actually a  built-in  TINY  BASIC  subroutine
+        call  that  permits  linkage to machine language subroutines. All 8086
+        registers are available for use by the machine language subroutine. It
+        is the responsibility of the machine language routine to execute a RET
+        instruction. In the example  above,  a  machine  language  routine  at
+        address I is called. J is an optional parameter that, if present, will
+        be passed in register BX to the subroutine.  
+
+
+        WAIT Command 
+
+               WAIT I,J,K 
+
+              The WAIT command is used to cause TINY BASIC execution to  pause
+        and  wait  for a specified value at an 8086 input port. In the example
+        above, the value at input port I is  read,  exclusive  OR'd  with  the
+        value of the expression J, and the result is then AND'd with the value
+        of  expression  K.  WAIT  will  return  only  if  the  final result is
+        non-zero. WAIT  provides an easy-to-use mechanism to cause TINY  BASIC
+        to  pause its execution and wait for a specified external event.  J is
+        assumed to be 0 if not specified.  
+
+
+        STOP Command 
+
+               STOP 
+
+              This command stops the execution of a  TINY  BASIC  program  and
+        passes  control to the TINY BASIC monitor. It can appear many times in
+        a program but it must be the last command in any given statement.  
+
+
+
+
+                                   DIRECT COMMANDS
+
+
+              Direct commands are those commands that can be invoked  only  by
+        the  operator  when TINY BASIC is in command mode (i.e. in response to
+        the '>' prompt).  All statement commands (those listed above)  can  be
+        invoked  while in command mode. Typing a control-C while in command or
+        monitor mode will cause TINY  BASIC  to  terminate.  Control  is  then
+        passed to the host operating system monitor.  
+
+              Recall that a statment consists of a statement  number  followed
+        by  one or more commands. If the statement number is missing, or if it
+        is 0, the  command  will  be  executed  immediatly  after  typing  the
+        terminating CR. The following commands can be used as direct commands;
+        they CANNOT be used as part of a TINY BASIC statement.  
+
+
+        RUN Command 
+
+               RUN 
+
+              The RUN command  causes  execution  of  the  stored  TINY  BASIC
+        program.  Execution will commence at the lowest numbered statement and
+        continue until there are either no more statements  to  execute  or  a
+        STOP  command is found. A long TINY BASIC program may be terminated by
+        typing control-X at the console.  This passes  control  the  the  TINY
+        BASIC  monitor.  A  control-C may be typed at any time also, then TINY
+        BASIC is terminated and  control  is  passed  to  the  host  operating
+        system.  
+
+
+        LIST Command 
+
+               LIST 
+
+              The LIST command is used  to  display  the  current  TINY  BASIC
+        program  on  the  operator's console. The statements will be listed in
+        numerical order. If LIST is followed by an expression (e.g. LIST  200)
+        the  listing  will  commence  with  statements following the specified
+        statement, inclusive.  
+
+
+        NEW Command 
+
+               NEW 
+
+              The NEW command deletes the current program  from  TINY  BASIC's
+        memory.  
+
+
+        SAVE Command 
+
+               SAVE C,H,S 
+
+              The SAVE command saves the current TINY  BASIC  program  on  the
+        floppy disk.  This command addresses the disk directly using Cylinder,
+        Head and Sector coordinates.(E.G."SAVE 1,0,1" will save on Cylinder 1,
+        Head 0 and Sector 1.) Maximum file size is one sector (512 Bytes). If
+	there is an error flag thrown during SAVE,  or if the file is too big 
+	the SAVE command will respond with "HOW?".
+  
+
+
+        LOAD Command 
+
+               LOAD FILENAME 
+
+              The LOAD command loads the specified TINY BASIC program from the
+        floppy disk.  This command addresses the disk directly using Cylinder,
+	Head and Sector coordinates. (E.G. "LOAD 1,0,1" will load from Cylinder
+	1, Head 0 and Sector 1.) Maximum files size is one sector (512 Bytes).
+	The LOAD command will respond with "HOW" if there is an error.  
+
+
+        BYE Command 
+
+               BYE 
+
+              The BYE command terminates TINY BASIC. Control is passed back to
+        the host operating system.  
+
+
+
+
+                                 TINY BASIC OPERATION
+			(Note: File Names not used in Ver. 1.2)
+
+
+              TINY BASIC is initiated from the host operating system's command
+        mode like any  other  transient  command.  TINY  BASIC  will  sign-on,
+        announce  'OK',  and then prompt '>' awaiting operator interaction. An
+        example follows:  
+        
+               A:TBASIC
+        
+               8086 TINY BASIC V1.0
+        
+               OK
+               >
+        
+        In the example  above  the  program  'TBASIC.COM'  was  found  on  the
+        logged-in  disk  ('A'  in  the  example).  TINY  BASIC  then commenced
+        execution by first  announcing  itself  and  then  prompting  '>'  for
+        operator input.  
+
+              TINY BASIC utilizes all of  the  host  operating  system's  line
+        editing  facilities.    For example, if an operator wished to cancel a
+        line typed to TINY BASIC, he need only type a control-X, etc. If  hard
+        copy  of a TINY BASIC session is desired, control-P and control-N will
+        toggle the printer, if it exists.  
+
+              At present, saved TINY BASIC programs can be  edited  only  with
+        the  internal  TINY  BASIC  editor.  Programs  prepared by an external
+        editor can not be read by TINY BASIC.

@@ -1,0 +1,29 @@
+This is the source code listing for the relocation code in 
+the PATB ROM file.  The source code was simply compiled 
+using DEBUG in DOS.
+
+Note that this code will relocate the PATB from ROM at 
+location F600H to RAM memory location 2000H.
+
+ROM location F600H is socket U29 on an IBM PC Motherboard
+for the 5150.  Since this is usually the starting location
+of CASSETTE BASIC, the Palo Alto Tiny Basic will load
+instead.
+
+MTM
+11/13/2013
+
+MOV	AX,2010
+MOV	ES,AX
+MOV	AX,F610
+MOV	DS,AX
+MOV	CX,1F00
+MOV	SI,0000
+MOV	DI,0000
+REPZ
+MOVSB
+MOV	AX,2000
+MOV	DS,AX
+MOV	SS,AX
+MOV	ES,AX
+JMP	2000:0100

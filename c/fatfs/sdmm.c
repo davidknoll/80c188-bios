@@ -13,16 +13,16 @@
   Features and Limitations:
 
   * Easy to Port Bit-banging SPI
-    It uses only four GPIO pins. No interrupt, no SPI is needed.
+    It uses only four GPIO pins. No complex peripheral needs to be used.
 
   * Platform Independent
-    You need to modify only a few macros to control GPIO ports.
+    You need to modify only a few macros to control the GPIO port.
 
   * Low Speed
     The data transfer rate will be several times slower than hardware SPI.
 
   * No Media Change Detection
-    Application program needs to perform f_mount() after media change.
+    Application program needs to perform a f_mount() after media change.
 
 /-------------------------------------------------------------------------*/
 
@@ -229,7 +229,7 @@ void deselect (void)
 {
 	BYTE d;
 
-	CS_H();
+	CS_H();				/* Set CS# high */
 	rcvr_mmc(&d, 1);	/* Dummy clock (force DO hi-z for multiple slave SPI) */
 }
 
@@ -244,10 +244,10 @@ int select (void)	/* 1:OK, 0:Timeout */
 {
 	BYTE d;
 
-	CS_L();
+	CS_L();				/* Set CS# low */
 	rcvr_mmc(&d, 1);	/* Dummy clock (force DO enabled) */
+	if (wait_ready()) return 1;	/* Wait for card ready */
 
-	if (wait_ready()) return 1;	/* OK */
 	deselect();
 	return 0;			/* Failed */
 }
@@ -457,22 +457,19 @@ DRESULT disk_read (
 	UINT count			/* Sector count (1..128) */
 )
 {
+	BYTE cmd;
+
+
 	if (disk_status(drv) & STA_NOINIT) return RES_NOTRDY;
 	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert LBA to byte address if needed */
 
-	if (count == 1) {	/* Single block read */
-		if ((send_cmd(CMD17, sector) == 0)	/* READ_SINGLE_BLOCK */
-			&& rcvr_datablock(buff, 512))
-			count = 0;
-	}
-	else {				/* Multiple block read */
-		if (send_cmd(CMD18, sector) == 0) {	/* READ_MULTIPLE_BLOCK */
-			do {
-				if (!rcvr_datablock(buff, 512)) break;
-				buff += 512;
-			} while (--count);
-			send_cmd(CMD12, 0);				/* STOP_TRANSMISSION */
-		}
+	cmd = count > 1 ? CMD18 : CMD17;			/*  READ_MULTIPLE_BLOCK : READ_SINGLE_BLOCK */
+	if (send_cmd(cmd, sector) == 0) {
+		do {
+			if (!rcvr_datablock(buff, 512)) break;
+			buff += 512;
+		} while (--count);
+		if (cmd == CMD18) send_cmd(CMD12, 0);	/* STOP_TRANSMISSION */
 	}
 	deselect();
 
@@ -572,10 +569,14 @@ DRESULT disk_ioctl (
 
 /*---------------------------------------------------------*/
 /* User Provided RTC Function called by FatFs module       */
+/*---------------------------------------------------------*/
+/* This is a real time clock service to be called back     */
+/* from FatFs module.                                      */
 
+#if !FF_FS_NORTC && !FF_FS_READONLY
 DWORD get_fattime (void)
 {
-	/* Returns current time packed into a DWORD variable */
+	/* Pack date and time into a DWORD variable */
 	return	  ((DWORD)(bcdtobin(inportb(RTC_YR)) + 20) << 25)	/* Year since 1980 */
 			| ((DWORD)bcdtobin(inportb(RTC_MTH)) << 21)			/* Month */
 			| ((DWORD)bcdtobin(inportb(RTC_DATE)) << 16)		/* Date */
@@ -583,4 +584,5 @@ DWORD get_fattime (void)
 			| ((DWORD)bcdtobin(inportb(RTC_MIN)) << 5)			/* Min */
 			| ((DWORD)bcdtobin(inportb(RTC_SEC)) >> 1);			/* Sec */
 }
+#endif
 

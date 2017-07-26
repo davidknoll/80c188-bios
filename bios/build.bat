@@ -20,6 +20,7 @@ bcc -1 -mc -I..\c -DNOSERIOB -oiofunc.obj -c ..\c\iofunc.c
 bcc -1 -mc -I..\c -I..\c\fatfs -off.obj -c ..\c\fatfs\ff.c
 bcc -1 -mc -I..\c -I..\c\fatfs -osdmm.obj -c ..\c\fatfs\sdmm.c
 bcc -1 -mc -I..\c -I..\c\fatfs -ounicode.obj -c ..\c\fatfs\ffunicode.c
+bcc -1 -mc -I..\c -I..\c\fatfs -offsystem.obj -c ..\c\fatfs\ffsystem.c
 
 tlink @bios.rsp
 rem exe2bin bios.exe bios.bin

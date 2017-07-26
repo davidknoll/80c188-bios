@@ -35,7 +35,6 @@
 /*-------------------------------------------------------------------------*/
 
 #include "ioports.h"			/* Include device specific declareation file here */
-#include "iofunc.h"
 #include <conio.h>
 
 
@@ -565,24 +564,4 @@ DRESULT disk_ioctl (
 	return res;
 }
 
-
-
-/*---------------------------------------------------------*/
-/* User Provided RTC Function called by FatFs module       */
-/*---------------------------------------------------------*/
-/* This is a real time clock service to be called back     */
-/* from FatFs module.                                      */
-
-#if !FF_FS_NORTC && !FF_FS_READONLY
-DWORD get_fattime (void)
-{
-	/* Pack date and time into a DWORD variable */
-	return	  ((DWORD)(bcdtobin(inportb(RTC_YR)) + 20) << 25)	/* Year since 1980 */
-			| ((DWORD)bcdtobin(inportb(RTC_MTH)) << 21)			/* Month */
-			| ((DWORD)bcdtobin(inportb(RTC_DATE)) << 16)		/* Date */
-			| ((DWORD)bcdtobin(inportb(RTC_HR)) << 11)			/* Hour */
-			| ((DWORD)bcdtobin(inportb(RTC_MIN)) << 5)			/* Min */
-			| ((DWORD)bcdtobin(inportb(RTC_SEC)) >> 1);			/* Sec */
-}
-#endif
 

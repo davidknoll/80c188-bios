@@ -207,9 +207,11 @@ void interrupt int13h(struct pregs r)
 			break;
 		}
 
-		for (bread=0;bread<imgbcnt;bread++) {
-			TCHAR rdbuf[2];
-			if (f_gets(rdbuf, 2, (drv < 0x80) ? &dskimg[drv] : &hddimg) == NULL) break;
+		for (bread = 0; bread < imgbcnt; bread++) {
+			TCHAR rdbuf;
+			UINT rdcnt;
+			if (f_read((drv < 0x80) ? &dskimg[drv] : &hddimg, &rdbuf, 1, &rdcnt) != FR_OK) break;
+			if (rdcnt != 1) break;
 		}
 		if (bread != imgbcnt) {
 			if (drv < 0x80) { dstat[drv] = 0x04; } else { hddstat = 0x04; }	// Sector not found
@@ -250,8 +252,11 @@ void interrupt int13h(struct pregs r)
 #else
 		// If parameters are correct, overwrite the relevant part of
 		// the image file with the format filler byte
-		for (bread=0;bread<imgbcnt;bread++) {
-			if (f_putc((drv < 0x80) ? curddpt->fmtfill : 0xF6, (drv < 0x80) ? &dskimg[drv] : &hddimg) != 1) break;
+		for (bread = 0; bread < imgbcnt; bread++) {
+			TCHAR wrbuf = (drv < 0x80) ? curddpt->fmtfill : 0xF6;
+			UINT wrcnt;
+			if (f_write((drv < 0x80) ? &dskimg[drv] : &hddimg, &wrbuf, 1, &wrcnt) != FR_OK) break;
+			if (wrcnt != 1) break;
 		}
 		if (bread == 0 && imgbcnt != 0) {
 			if (drv < 0x80) { dstat[drv] = 0x03; } else { hddstat = 0x03; }	// Write protected

@@ -115,23 +115,23 @@ void interrupt int15h(struct pregs r)
 
 //	case 0x69:	// f_fdisk (excluded by _USE_MKFS = 0 & _MULTI_PARTITION = 0)
 
-	case 0x6A:	// f_gets
-		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
-		f_gets(rwbuf, bcnt, &fatfsfile[fileno]);
-		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
-		break;
+//	case 0x6A:	// f_gets (excluded by FF_USE_STRFUNC = 0)
+//		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
+//		f_gets(rwbuf, bcnt, &fatfsfile[fileno]);
+//		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
+//		break;
 
-	case 0x6B:	// f_putc
-		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
-		f_putc(bcnt & 0xFF, &fatfsfile[fileno]);
-		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
-		break;
+//	case 0x6B:	// f_putc (excluded by FF_USE_STRFUNC = 0)
+//		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
+//		f_putc(bcnt & 0xFF, &fatfsfile[fileno]);
+//		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
+//		break;
 
-	case 0x6C:	// f_puts
-		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
-		f_puts(rwbuf, &fatfsfile[fileno]);
-		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
-		break;
+//	case 0x6C:	// f_puts (excluded by FF_USE_STRFUNC = 0)
+//		if (fileno >= FILES) { result = FR_INVALID_PARAMETER; break; }
+//		f_puts(rwbuf, &fatfsfile[fileno]);
+//		result = f_error(&fatfsfile[fileno]) ? FR_DISK_ERR : FR_OK;
+//		break;
 
 //	case 0x6D:	// f_printf (not implemented)
 

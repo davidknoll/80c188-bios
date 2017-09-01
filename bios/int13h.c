@@ -19,23 +19,6 @@ static unsigned char dchange[FDRIVES];	// Change line flag
 
 static const char *hddimgname = "c.img";
 
-// Diskette Drive Parameter Tables (DDPT)
-// 3 1/2" 1.44MB, 80 cyl * 2 hd * 18 spt * 512 bps
-struct ddpt ddpt1440 = {
-	0xAF, 0x02, 0x25, 0x02, 18, 0x1B, 0xFF, 0x6C, 0xF6, 0x0F, 0x08,
-	79, 0x00, 0x04
-};
-
-struct fdpt deffdpt = {
-	0,			// Cylinders, filled in on image mount
-	255,		// Heads, standard translation
-	0, 0, 0,	// Obsolete fields
-	0,			// Control byte, not used in this implementation
-	0, 0, 0, 0,	// Obsolete fields
-	63,			// Sectors, standard translation
-	0			// Reserved
-};
-
 void interrupt int13h(struct pregs r)
 {
 	UINT bread;			// For FatFs to store number of bytes read/written

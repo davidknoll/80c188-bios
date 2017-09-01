@@ -14,7 +14,7 @@
  * eg. BIOS functions.
  * Highly dependent on the compiler-generated preamble.
  * Do something like: void interrupt int14h(struct pregs r)
- * 
+ *
  * NB: SS and DS should be equal / are assumed to be equal in
  * memory models with near data pointers (tiny, small, medium), but the
  * interrupt handler preamble does not restore SS like it does DS.

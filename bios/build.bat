@@ -16,6 +16,7 @@ bcc -1 -mc -I..\c -DPOLLED -c serial.c
 
 tasm /d__ROM__ /dINITSP=4000h ..\c\crt0ram.asm, crt0rom.obj
 bcc -1 -mc -I..\c -DNOSERIOB -oiofunc.obj -c ..\c\iofunc.c
+bcc -1 -mc -I..\c -c ddptfdpt.c
 
 bcc -1 -mc -I..\c -I..\c\fatfs -off.obj -c ..\c\fatfs\ff.c
 bcc -1 -mc -I..\c -I..\c\fatfs -osdmm.obj -c ..\c\fatfs\sdmm.c

@@ -8,6 +8,14 @@
 
 static FIL fatfsfile[FILES];
 
+// Table returned by AH=C0h (Get Configuration)
+static const unsigned char cfgtbl[] = {
+	0x08, 0x00,						// Number of bytes following
+	0xFE, 0x00,						// Model (here XT), submodel
+	0x00,							// BIOS revision
+	0x20, 0x44, 0x00, 0x48, 0x01	// Features
+};
+
 void interrupt int15h(struct pregs r)
 {
 	UINT bread;			// For FatFs to store number of bytes read/written
@@ -22,6 +30,9 @@ void interrupt int15h(struct pregs r)
 
 	sti();
 	switch (func) {		// Function number in AH
+
+	// Functions 00-03h are for the cassette system on the original PC
+	// Others are reserved and/or used by various BIOSes in various ways
 
 //	case 0x50:	// f_mount (included in Int 13h)
 //		result = f_mount(&sdcard, "", 1);
@@ -161,8 +172,14 @@ void interrupt int15h(struct pregs r)
 		result = f_error(&fatfsfile[fileno]);
 		break;
 
-	default:
-		result = FR_INVALID_PARAMETER;
+	case 0xC0:	// Get configuration
+		r.es = (void far *) cfgtbl >> 16;
+		r.bx = (void far *) cfgtbl & 0xFFFF;
+		result = 0x00;	// Success
+		break;
+
+	default:	// Unsupported function
+		result = 0x86;
 	}
 
 	// Return with status in AH and carry set on error

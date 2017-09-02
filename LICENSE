@@ -2,7 +2,6 @@
 * FatFs is effectively 1-clause BSD.
 * MON88 (not part of the BIOS) is GPL2+.
 * Palo Alto Tiny BASIC is based on an original identified as "copyleft, all wrongs reserved".
-* bin2c is public domain.
 * startup.asm may be GPL3, I can't remember how similar it is to what it is based on.
 * c/crt0ram.asm is based on startup code from Borland C++.
 

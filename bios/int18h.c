@@ -4,7 +4,6 @@
 #include <string.h>
 #include "bios.h"
 #include "iofunc.h"
-#include "patb.h"
 
 static void ihexrec(union farptr *loadptrptr)
 {

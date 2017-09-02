@@ -150,3 +150,7 @@ extern char seroust(void);
 extern char serinst(void);
 extern unsigned char fakelsr(void);
 extern void serinit(unsigned char lcr, unsigned int dl);
+
+/* PATB */
+#define patb_size 2792
+extern const unsigned char far patb[patb_size];

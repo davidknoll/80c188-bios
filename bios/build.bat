@@ -6,7 +6,6 @@ bcc -1 -mc -I..\c -c int14h.c
 bcc -1 -mc -I..\c -I..\c\fatfs -c int15h.c
 bcc -1 -mc -I..\c -c int16h.c
 bcc -1 -mc -I..\c -c int17h.c
-bin2c -o patb.h -m -n patb ..\patb\PATB-MTM.com
 bcc -1 -mc -I..\c -c int18h.c
 bcc -1 -mc -I..\c -c int19h.c
 bcc -1 -mc -I..\c -c int1Ah.c
@@ -14,6 +13,8 @@ bcc -1 -mc -I..\c -c intcpu.c
 bcc -1 -mc -I..\c -DTESTING -c main.c
 bcc -1 -mc -I..\c -DPOLLED -c serial.c
 
+srec_cat ..\patb\PATB-MTM.com -Binary -Output patb.inc -ASM
+tasm patb.asm, patb.obj
 tasm /d__ROM__ /dINITSP=4000h ..\c\crt0ram.asm, crt0rom.obj
 bcc -1 -mc -I..\c -DNOSERIOB -oiofunc.obj -c ..\c\iofunc.c
 bcc -1 -mc -I..\c -c ddptfdpt.c

@@ -1,0 +1,6 @@
+			PUBLIC _patb
+_TEXT		SEGMENT BYTE PUBLIC 'CODE'
+_patb		LABEL BYTE
+			INCLUDE patb.inc
+_TEXT		ENDS
+			END

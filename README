@@ -10,9 +10,9 @@ and have installed/in your PATH (in addition to a bunch of manual editing):
 * Borland Turbo Assembler (tasm)
 * * These are not free software, but are available on some abandonware sites.
 I should probably convert things to use Open Watcom instead.
-* `bin2c` (included)
+* `srecord`, specifically the `srec_cat` utility
 * * To embed Palo Alto Tiny BASIC as ROM BASIC
-* * Public domain, originally from https://sourceforge.net/projects/bin2c/
+* * GPL3+, available from http://srecord.sourceforge.net/
 * `exe2rom` (included)
 * * To convert the linked EXE file to a raw binary, relocated for ROM use
 * * By me, specially for this project

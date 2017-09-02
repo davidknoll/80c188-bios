@@ -1,7 +1,7 @@
 bios/bios.exe
 bios/bios.map
 bios/bios.rom
-bios/patb.h
+bios/patb.inc
 bios/*.obj
 exe2rom/exe2rom.exe
 exe2rom/exe2rom.obj

@@ -1,6 +1,7 @@
 /* Interrupt 15h
  * BIOS cassette / misc services
  */
+#include <dos.h>
 #include "bios.h"
 #include "ff.h"
 #include "iofunc.h"
@@ -173,8 +174,8 @@ void interrupt int15h(struct pregs r)
 		break;
 
 	case 0xC0:	// Get configuration
-		r.es = (void far *) cfgtbl >> 16;
-		r.bx = (void far *) cfgtbl & 0xFFFF;
+		r.es = FP_SEG(cfgtbl);
+		r.bx = FP_OFF(cfgtbl);
 		result = 0x00;	// Success
 		break;
 

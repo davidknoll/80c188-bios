@@ -24,7 +24,10 @@ ELSE
 ENDIF
 
 			EXTRN _main:NEAR, _exit:NEAR
-			PUBLIC __start, _callfards
+			PUBLIC __start
+IFDEF __ROM__
+			PUBLIC _callfards
+ENDIF
 			PUBLIC __terminate, __checknull, __restorezero, __cleanup
 			PUBLIC _errno, __heapbase, __brklvl, __heaptop, __psp
 			PUBLIC __version, __realcvtvector

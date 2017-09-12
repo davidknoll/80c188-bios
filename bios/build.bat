@@ -25,5 +25,5 @@ bcc -1 -mc -I..\c -I..\c\fatfs -ounicode.obj -c ..\c\fatfs\ffunicode.c
 bcc -1 -mc -I..\c -I..\c\fatfs -offsystem.obj -c ..\c\fatfs\ffsystem.c
 
 tlink @bios.rsp
-rem exe2bin bios.exe bios.bin
-rem bin2hex bios.bin bios.hex
+rem exe2rom bios.exe bios.bin 7000 7XXX 7C00
+rem srec_cat -Output bios.hex -Intel --address-length=3 bios.bin -Binary -offset 0x70000 -execution_start_address 0x70000000

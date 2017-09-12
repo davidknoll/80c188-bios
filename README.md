@@ -16,6 +16,9 @@ I should probably convert things to use Open Watcom instead.
 * `exe2rom` (included)
 * * To convert the linked EXE file to a raw binary, relocated for ROM use
 * * By me, specially for this project
+* Netwide Assembler (nasm)
+* * For the 80C188 startup code
+* * 2-clause BSD, available from http://www.nasm.us/
 
 Some configuration details are in bios/main.c and c/ioports.h,
 as well as the code being pretty specific to the hardware.

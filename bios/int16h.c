@@ -26,51 +26,56 @@ static const unsigned char scancodes[] = {
 
 void interrupt int16h(struct pregs r)
 {
-	static int savec = 0;
+	static unsigned int savec = 0;
 	sti();
 	switch (r.ax >> 8) {	// Function number in AH
 
 	case 0x00:	// Read
 		if (savec) {
-			r.ax = savec & 0xFF;
+			r.ax = savec;
 			savec = 0;
 		} else {
 			r.ax = serinb();
+			if (r.ax < 0x80) r.ax |= scancodes[r.ax] << 8;
 		}
-		if (r.ax < 0x80) r.ax |= scancodes[r.ax] << 8;
 		break;
 
 	case 0x01:	// Status
 		if (savec) {
 			// A character has already been saved below
-			r.ax = savec & 0xFF;
-			if (r.ax < 0x80) r.ax |= scancodes[r.ax] << 8;
+			r.ax = savec;
 			r.flags &= ~F_Z;
 		} else if (serinst()) {
 			// Fake returning the keystroke without removing it
-			savec = 0x0100 | serinb();
-			r.ax = savec & 0xFF;
+			r.ax = serinb();
 			if (r.ax < 0x80) r.ax |= scancodes[r.ax] << 8;
+			savec = r.ax;
 			r.flags &= ~F_Z;
 		} else {
 			r.flags |= F_Z;	// Z set if no character available
 		}
 		break;
 
+	case 0x02:	// Get shift flags
+		// Not that there'll be anything here with serial
+		r.ax &= 0xFF00;
+		r.ax |= BDA[0x17];
+		break;
+
 	// Functions 0x03 and 0x04 aren't relevant to the serial port and don't return anything
 
 	case 0x05:	// Keyboard write
-		// There's room for one byte in the "fake return" buffer from above
+		// There's room for one keystroke in the "fake return" buffer from above
 		r.ax &= 0xFF00;
 		if (savec) {
 			r.ax |= 0x01;	// Return AL=01h if buffer full
 		} else {
-			savec = 0x0100 | (r.cx & 0xFF);
+			savec = r.cx;
 		}
 		break;
 
-	case 0x02:	// Shift status
-		// Shift key flags aren't relevant to the serial port
+	// There are no standard functions 0x06, 0x07, 0x08
+
 	case 0x09:	// Get keyboard functionality
 		// Not supporting 122-key, enhanced, keyboard ID or typematic rate functions
 		r.ax &= 0xFF00;

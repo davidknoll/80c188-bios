@@ -6,6 +6,7 @@
 #include <conio.h>
 #include "bios.h"
 #include "iofunc.h"
+#include "ioports.h"
 
 #define uartrbr uartbase
 #define uartthr uartbase
@@ -16,11 +17,12 @@
 #define uartlsr (uartbase+5)
 #define uartmsr (uartbase+6)
 #define uartscr (uartbase+7)
-#define uartdll uartbase
-#define uartdlm (uartbase+1)
+#define uart_dll uartbase
+#define uart_dlm (uartbase+1)
 
 /* Baud rate divisor table */
 static const unsigned int baudtbl[] = {
+	// Standard baud rate crystal, 1.8432MHz
 	1843200UL / (16 * 110UL),		// Available with AH=00h
 	1843200UL / (16 * 150UL),
 	1843200UL / (16 * 300UL),
@@ -33,6 +35,21 @@ static const unsigned int baudtbl[] = {
 	1843200UL / (16 * 38400UL),		// Available with ComShare
 	1843200UL / (16 * 57600UL),
 	1843200UL / (16 * 115200UL),
+	0, 0, 0, 0,						// Invalid
+
+	// Used on my board, 2.4576MHz
+	F_UART / (16 * 110UL),			// Available with AH=00h
+	F_UART / (16 * 150UL),
+	F_UART / (16 * 300UL),
+	F_UART / (16 * 600UL),
+	F_UART / (16 * 1200UL),
+	F_UART / (16 * 2400UL),
+	F_UART / (16 * 4800UL),
+	F_UART / (16 * 9600UL),
+	F_UART / (16 * 19200UL),		// Available with AH=04h
+	F_UART / (16 * 38400UL),		// Available with ComShare
+	F_UART / (16 * 57600UL),
+	F_UART / (16 * 115200UL),
 	0, 0, 0, 0						// Invalid
 };
 
@@ -51,15 +68,21 @@ void interrupt int14h(struct pregs r)
 	int i;
 	unsigned int uartbase;
 	sti();
-	if (r.dx > 3) return;
-	uartbase = *((volatile unsigned int far *) (BDA+0x00+(r.dx<<1)));
-	if (!uartbase) return;
+
+	// Look up I/O address of that COM port number in the BDA
+	if (r.dx > 3) { r.ax = 0x8000; return; }	// Error (no such port)
+	uartbase = *((volatile unsigned int far *) (BDA + 0x00 + (r.dx << 1)));
+	if (!uartbase) { r.ax = 0x8000; return; }
+
 	switch (r.ax >> 8) {	// Function number in AH
 
 	case 0x00:	// Initialise port
+		// If this UART is controlled by the 80C188's onboard chip selects,
+		// use the alternative baud rate divisors
+		i = (uartbase >= EP_BASE && uartbase < EP_BASE + 0x400) ? 0x10 : 0;
 		outportb(uartlcr, 0x80);							// Set DLAB
-		outportb(uartdll, baudtbl[r.ax >> 5]);				// Baud rate divisor
-		outportb(uartdlm, baudtbl[r.ax >> 5] >> 8);
+		outportb(uart_dll, baudtbl[(r.ax >> 5) | i]);		// Baud rate divisor
+		outportb(uart_dlm, baudtbl[(r.ax >> 5) | i] >> 8);
 		outportb(uartlcr, r.ax & 0x1F);						// Clear DLAB, set other parameters
 		outportb(uartier, 0x00);							// Disable interrupts
 		r.ax = (inportb(uartlsr) << 8) | inportb(uartmsr);	// Return LSR & MSR
@@ -68,7 +91,7 @@ void interrupt int14h(struct pregs r)
 	case 0x01:	// Write character
 		outportb(uartmcr, 0x03);							// Assert DTR, RTS
 		r.ax &= 0xFF;										// Preserve character in AL
-		for (i=32000;i>0;i--) {								// Timeout on number of attempts
+		for (i = 32000; i > 0; i--) {						// Timeout on number of attempts
 			if ((inportb(uartlsr) & 0x20) && (inportb(uartmsr) & 0x30)) {	// Wait for THRE, DSR, CTS
 				outportb(uartthr, r.ax);					// Output the character
 				r.ax |= inportb(uartlsr) << 8;				// Return LSR in AH
@@ -82,7 +105,7 @@ void interrupt int14h(struct pregs r)
 	case 0x02:	// Read character
 		outportb(uartmcr, 0x01);							// Assert DTR
 		r.ax &= 0xFF;										// Preserve character in AL
-		for (i=32000;i>0;i--) {								// Timeout on number of attempts
+		for (i = 32000; i > 0; i--) {						// Timeout on number of attempts
 			if ((inportb(uartlsr) & 0x01) && (inportb(uartmsr) & 0x20)) {	// Wait for DR, DSR
 				r.ax = inportb(uartrbr);					// Input the character
 				r.ax |= inportb(uartlsr) << 8;				// Return LSR in AH
@@ -98,9 +121,12 @@ void interrupt int14h(struct pregs r)
 		break;
 
 	case 0x04:	// Extended initialise (on Convertible & PS)
+		// If this UART is controlled by the 80C188's onboard chip selects,
+		// use the alternative baud rate divisors
+		i = (uartbase >= EP_BASE && uartbase < EP_BASE + 0x400) ? 0x10 : 0;
 		outportb(uartlcr, 0x80);							// Set DLAB
-		outportb(uartdll, baudtbl[r.cx & 0x0F]);			// Baud rate divisor
-		outportb(uartdlm, baudtbl[r.cx & 0x0F] >> 8);
+		outportb(uart_dll, baudtbl[(r.cx & 0x0F) | i]);		// Baud rate divisor
+		outportb(uart_dlm, baudtbl[(r.cx & 0x0F) | i] >> 8);
 		outportb(uartlcr,
 			((r.ax & 0x01) << 6) |							// Break
 			((r.bx & 0x01) << 2) |							// Stop bits

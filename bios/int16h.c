@@ -2,7 +2,6 @@
  * BIOS keyboard services
  */
 #include "bios.h"
-#include "iofunc.h"
 
 // Reverse scancode table, so we have a scancode to return with the ASCII
 static const unsigned char scancodes[] = {

@@ -4,7 +4,6 @@
 #include <dos.h>
 #include "bios.h"
 #include "ff.h"
-#include "iofunc.h"
 #define FILES 4
 
 static FIL fatfsfile[FILES];

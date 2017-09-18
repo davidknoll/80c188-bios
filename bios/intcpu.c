@@ -1,40 +1,39 @@
 #include "bios.h"
-#include "iofunc.h"
 
 static void regdump(struct pregs *rp, char *msg)
 {
 	unsigned int rss;
 	asm mov rss, ss;
-	outstr("\r\n ** Unhandled interrupt: ");
-	outstr(msg);
-	outstr(", registers follow: **\r\n");
+	conoutstr("\r\n ** Unhandled interrupt: ");
+	conoutstr(msg);
+	conoutstr(", registers follow: **\r\n");
 
-	outstr("CS=");
-	serouthw(rp->cs);
-	outstr(", DS=");
-	serouthw(rp->ds);
-	outstr(", ES=");
-	serouthw(rp->es);
-	outstr(", SS=");
-	serouthw(rss);
-	outstr(", IP=");
-	serouthw(rp->ip);
-	outstr(", BP=");
-	serouthw(rp->bp);
-	outstr(", flags=");
-	serouthw(rp->flags);
-	outstr("\r\nAX=");
-	serouthw(rp->ax);
-	outstr(", BX=");
-	serouthw(rp->bx);
-	outstr(", CX=");
-	serouthw(rp->cx);
-	outstr(", DX=");
-	serouthw(rp->dx);
-	outstr(", SI=");
-	serouthw(rp->si);
-	outstr(", DI=");
-	serouthw(rp->di);
+	conoutstr("CS=");
+	conouthw(rp->cs);
+	conoutstr(", DS=");
+	conouthw(rp->ds);
+	conoutstr(", ES=");
+	conouthw(rp->es);
+	conoutstr(", SS=");
+	conouthw(rss);
+	conoutstr(", IP=");
+	conouthw(rp->ip);
+	conoutstr(", BP=");
+	conouthw(rp->bp);
+	conoutstr(", flags=");
+	conouthw(rp->flags);
+	conoutstr("\r\nAX=");
+	conouthw(rp->ax);
+	conoutstr(", BX=");
+	conouthw(rp->bx);
+	conoutstr(", CX=");
+	conouthw(rp->cx);
+	conoutstr(", DX=");
+	conouthw(rp->dx);
+	conoutstr(", SI=");
+	conouthw(rp->si);
+	conoutstr(", DI=");
+	conouthw(rp->di);
 	panic("System halted");
 }
 

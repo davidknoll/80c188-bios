@@ -9,6 +9,12 @@
 #define F_D (1<<10)	/* Direction */
 #define F_O (1<<11)	/* Overflow */
 
+/* Simple assembler instructions */
+#define sti() asm sti
+#define cli() asm cli
+#define nop() asm nop
+#define hlt() asm hlt
+
 /* Enable access to the preserved registers inside an interrupt
  * handler, in order to retrieve arguments and return results for
  * eg. BIOS functions.
@@ -148,9 +154,28 @@ extern void seroutb(char c);
 extern char serinb(void);
 extern char seroust(void);
 extern char serinst(void);
-extern unsigned char fakelsr(void);
+extern unsigned char serlsr(void);
 extern void serinit(unsigned char lcr, unsigned int dl);
+extern void seroutstr(const char *str);
+extern void serouthn(unsigned char c);
+extern void serouthb(unsigned char c);
+extern void serouthw(unsigned int i);
+extern unsigned char serinhn(void);
+extern unsigned char serinhb(void);
+extern unsigned int serinhw(void);
+extern void seroutd(int i);
 
 /* PATB */
 #define patb_size 2792
 extern const unsigned char far patb[patb_size];
+
+/* BIOS console I/O */
+extern void conoutb(const char c);
+extern char coninb(void);
+extern void conoutstr(const char *s);
+extern void conouthn(unsigned char c);
+extern void conouthb(unsigned char c);
+extern void conouthw(unsigned int i);
+extern int bintobcd(int i);
+extern int bcdtobin(int i);
+extern void panic(const char *msg);

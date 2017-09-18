@@ -5,7 +5,6 @@
  */
 #include <conio.h>
 #include "bios.h"
-#include "iofunc.h"
 #include "ioports.h"
 
 #define uartrbr uartbase

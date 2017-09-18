@@ -2,7 +2,6 @@
  * Boot from disk
  */
 #include "bios.h"
-#include "iofunc.h"
 
 static unsigned char tryread(unsigned char drive)
 {
@@ -48,13 +47,13 @@ void interrupt int19h(void)
 	sti();
 	// Try floppy, then hard disk, then ROM BASIC
 	if (BDA[0x10] & 0x01) {
-		outstr("Trying to boot from floppy...\r\n");
+		conoutstr("Trying to boot from floppy...\r\n");
 		tryboot(0x00);
 	}
 	if (BDA[0x75]) {
-		outstr("Trying to boot from hard disk...\r\n");
+		conoutstr("Trying to boot from hard disk...\r\n");
 		tryboot(0x80);
 	}
-	outstr("\r\n");
+	conoutstr("\r\n");
 	asm int 18h;
 }

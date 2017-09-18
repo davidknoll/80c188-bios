@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bios.h"
-#include "iofunc.h"
 #include "ioports.h"
 
 /* Default interrupt vectors */
@@ -151,11 +150,15 @@ int main()
 	sti();
 
 	// Sign-on message
-	outstr("\x0F\x1B[H\x1B[2J\r\nDavid's 80C188 SBC BIOS\r\n");
+	asm {
+		mov ax, 0003h
+		int 10h
+	}
+	conoutstr("\r\nDavid's 80C188 SBC BIOS\r\n");
 
 	// Check for RTC battery low
 	if ((inportb(RTC_CTLD) & 0x80) != 0x80) {
-		outstr("RTC battery low\r\n\n");
+		conoutstr("RTC battery low\r\n\n");
 		// Reset to 00:00, 01/01/1980
 		asm {
 			mov ah, 03h		// Time
@@ -183,24 +186,24 @@ int main()
 			mov yr, cl
 		}
 
-		outstr("Time is ");
-		serouthb(hr);
-		seroutb(':');
-		serouthb(min);
-		outstr(" on ");
-		serouthb(date);
-		seroutb('/');
-		serouthb(mth);
-		seroutb('/');
-		serouthb(cent);
-		serouthb(yr);
-		outstr("\r\n\n");
+		conoutstr("Time is ");
+		conouthb(hr);
+		conoutb(':');
+		conouthb(min);
+		conoutstr(" on ");
+		conouthb(date);
+		conoutb('/');
+		conouthb(mth);
+		conoutb('/');
+		conouthb(cent);
+		conouthb(yr);
+		conoutstr("\r\n\n");
 	}
 
 	// Init virtual disks
-	outstr("Mounting ");
-	outstr(imgname);
-	outstr(" on A:... ");
+	conoutstr("Mounting ");
+	conoutstr(imgname);
+	conoutstr(" on A:... ");
 	asm {
 		mov ah, 60h		// Mount SD card
 		mov dl, 00h
@@ -212,23 +215,23 @@ int main()
 		int 13h
 		jc mffail
 	}
-	outstr("OK\r\n");
+	conoutstr("OK\r\n");
 	goto mfok;
 mffail:
-	outstr("failed\r\n");
+	conoutstr("failed\r\n");
 mfok:
 
-	outstr("Mounting hard disk image... ");
+	conoutstr("Mounting hard disk image... ");
 	asm {
 		mov ah, 0Dh		// Alternate disk reset
 		mov dl, 80h
 		int 13h
 		jc mhfail
 	}
-	outstr("OK\r\n");
+	conoutstr("OK\r\n");
 	goto mhok;
 mhfail:
-	outstr("failed\r\n");
+	conoutstr("failed\r\n");
 mhok:
 
 	oproms();		// Init option ROMs

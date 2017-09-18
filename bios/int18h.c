@@ -3,7 +3,6 @@
  */
 #include <string.h>
 #include "bios.h"
-#include "iofunc.h"
 
 static void ihexrec(union farptr *loadptrptr)
 {
@@ -47,15 +46,15 @@ static void ihexrec(union farptr *loadptrptr)
 	}
 	serinhb();										// Checksum (ignored)
 	if (rectype > 0x05) {
-		seroutb('?');								// Bad record
+		conoutb('?');								// Bad record
 	} else if (
 		rectype == 0x03 || rectype == 0x05 ||
 		(rectype == 0x01 && loadptrptr->segoff.off != 0x0000)
 	) {
-		outstr("*\r\n\r\n");						// Good record with start address
+		conoutstr("*\r\n\r\n");						// Good record with start address
 		callfards(loadptrptr->funcptr);				// Call loaded code
 	} else {
-		seroutb('.');								// Good record
+		conoutb('.');								// Good record
 	}
 }
 
@@ -117,16 +116,16 @@ static void srec(union farptr *loadptrptr)
 	}
 	serinhb();										// Checksum (ignored)
 	if (rectype == 0x4 || rectype == 0x6 || rectype > 0x9) {
-		seroutb('?');								// Bad record
+		conoutb('?');								// Bad record
 	} else if (
 		(rectype == 0x7 && (loadptrptr->segoff.seg | loadptrptr->segoff.off) != 0x0000) ||
 		(rectype == 0x8 && (loadptrptr->segoff.seg | loadptrptr->segoff.off) != 0x0000) ||
 		(rectype == 0x9 && loadptrptr->segoff.off != 0x0000)
 	) {
-		outstr("*\r\n\r\n");						// Good record with start address
+		conoutstr("*\r\n\r\n");						// Good record with start address
 		callfards(loadptrptr->funcptr);				// Call loaded code
 	} else {
-		seroutb('.');								// Good record
+		conoutb('.');								// Good record
 	}
 }
 
@@ -134,9 +133,9 @@ void interrupt int18h(void)
 {
 	union farptr loadptr;
 	sti();
-	outstr("Hex loader for David's 80C188 SBC\r\n");
-	outstr("Load Intel hex or Motorola S-records now, press Ctrl-B for BASIC,\r\n");
-	outstr("or press Ctrl-R to reboot. Record checksums are currently ignored.\r\n");
+	conoutstr("Hex loader for David's 80C188 SBC\r\n");
+	conoutstr("Load Intel hex or Motorola S-records now, press Ctrl-B for BASIC,\r\n");
+	conoutstr("or press Ctrl-R to reboot. Record checksums are currently ignored.\r\n");
 	loadptr.segoff.seg = 0x0050;	// Default load segment
 
 	while (1) {
@@ -148,7 +147,7 @@ void interrupt int18h(void)
 			srec(&loadptr);
 			break;
 		case 0x02:					// BASIC
-			outstr("\r\n");
+			conoutstr("\r\n");
 			loadptr.segoff.seg = 0x2000;
 			loadptr.segoff.off = 0x0100;
 			memcpy(loadptr.charptr, patb, patb_size);

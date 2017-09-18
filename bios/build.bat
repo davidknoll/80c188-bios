@@ -16,7 +16,7 @@ bcc -1 -mc -I..\c -DPOLLED -c serial.c
 srec_cat ..\patb\PATB-MTM.com -Binary -Output patb.inc -ASM
 tasm patb.asm, patb.obj
 tasm /d__ROM__ /dINITSP=4000h ..\c\crt0ram.asm, crt0rom.obj
-bcc -1 -mc -I..\c -DNOSERIOB -oiofunc.obj -c ..\c\iofunc.c
+bcc -1 -mc -I..\c -c console.c
 bcc -1 -mc -I..\c -c ddptfdpt.c
 
 bcc -1 -mc -I..\c -I..\c\fatfs -off.obj -c ..\c\fatfs\ff.c

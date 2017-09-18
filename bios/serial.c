@@ -1,4 +1,9 @@
-/* Basic serial port functions */
+/* Basic onboard serial port functions
+ * Should only be called directly from inside Int 10h / 16h,
+ * because if these services are provided by an option ROM,
+ * any console I/O from the BIOS itself needs to work with
+ * the alternative device.
+ */
 #include <conio.h>
 #include "bios.h"
 #include "ioports.h"
@@ -80,7 +85,7 @@ char serinst(void) { return cbufempty() ? 0x00 : 0xFF; }
 static volatile unsigned char lsrsave;
 #endif
 
-unsigned char fakelsr(void)
+unsigned char serlsr(void)
 {
 #ifdef POLLED
 	return inportb(UART_LSR);
@@ -151,4 +156,78 @@ void interrupt int0Dh(void)
 	}
 #endif
 	outport(IIM_EOI, 0x000D);	// Specific EOI for INT1 input
+}
+
+/* Output a null-terminated string */
+void seroutstr(const char *s) { while (*s) seroutb(*s++); }
+
+/* Output a hex number */
+void serouthn(unsigned char c)
+{
+	c &= 0x0F;
+	if (c < 0x0A) {
+		seroutb('0' + c);
+	} else {
+		seroutb('A' + (c - 0x0A));
+	}
+}
+
+void serouthb(unsigned char c)
+{
+	serouthn(c >> 4);
+	serouthn(c);
+}
+
+void serouthw(unsigned int i)
+{
+	serouthb(i >> 8);
+	serouthb(i);
+}
+
+/* Input a hex number */
+unsigned char serinhn(void)
+{
+	while (1) {
+		unsigned char c = serinb();
+		if (c >= '0' && c <= '9') return (c - '0');
+		if (c >= 'A' && c <= 'F') return (c - 'A') + 0xA;
+		if (c >= 'a' && c <= 'f') return (c - 'a') + 0xA;
+	}
+}
+
+unsigned char serinhb(void)
+{
+	unsigned char c = serinhn() << 4;
+	c |= serinhn();
+	return c;
+}
+
+unsigned int serinhw(void)
+{
+	unsigned int i = serinhb() << 8;
+	i |= serinhb();
+	return i;
+}
+
+/* Output a decimal number */
+void seroutd(int i)
+{
+	if (i < 0) {
+		seroutb('-');
+		i = -i;
+	}
+
+	if (i < 10) {
+		serouthn(i);
+	} else if (i < 100) {
+		serouthb(bintobcd(i));
+	} else if (i < 1000) {
+		serouthn(bintobcd(i) >> 8);
+		serouthb(bintobcd(i));
+	} else if (i < 10000) {
+		serouthw(bintobcd(i));
+	} else {
+		serouthn(bintobcd(i / 10000));
+		serouthw(bintobcd(i));
+	}
 }

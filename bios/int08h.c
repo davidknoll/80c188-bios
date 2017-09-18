@@ -6,7 +6,6 @@
  */
 #include <conio.h>
 #include "bios.h"
-#include "iofunc.h"
 #include "ioports.h"
 
 void interrupt int08h(void)

@@ -1,10 +1,8 @@
 /* Interrupt 13h
  * BIOS disk services
  */
-#include <stdlib.h>
 #include "bios.h"
 #include "ff.h"
-#include "iofunc.h"
 #define FDRIVES 2
 #define HDSECSZ 512UL
 

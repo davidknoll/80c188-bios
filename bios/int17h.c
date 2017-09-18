@@ -7,7 +7,6 @@
  */
 #include <conio.h>
 #include "bios.h"
-#include "iofunc.h"
 
 #define lptdata lptbase
 #define lptstat (lptbase+1)

@@ -2,7 +2,6 @@
  * BIOS video services
  */
 #include "bios.h"
-#include "iofunc.h"
 
 /* Map BIOS attribute colour codes to SGR ones */
 static const unsigned char atttosgrcol[] = {
@@ -23,13 +22,13 @@ static void doescatt(unsigned char att)
 	if (att == lastatt) return;			// Don't repeat unnecessarily
 	lastatt = att;
 
-	outstr("\x1B[m");					// Reset SGR
-	if (att & 0x80) outstr("\x1B[5m");	// Foreground blink
-	outstr("\x1B[4");					// Background colour
+	seroutstr("\x1B[m");					// Reset SGR
+	if (att & 0x80) seroutstr("\x1B[5m");	// Foreground blink
+	seroutstr("\x1B[4");					// Background colour
 	seroutb('0' + atttosgrcol[(att & 0x70) >> 4]);
 	seroutb('m');
-	if (att & 0x08) outstr("\x1B[1m");	// Foreground bright
-	outstr("\x1B[3");					// Foreground colour
+	if (att & 0x08) seroutstr("\x1B[1m");	// Foreground bright
+	seroutstr("\x1B[3");					// Foreground colour
 	seroutb('0' + atttosgrcol[att & 0x07]);
 	seroutb('m');
 }
@@ -37,7 +36,7 @@ static void doescatt(unsigned char att)
 /* Set the cursor position */
 static void doescpos(int row, int col)
 {
-	outstr("\x1B[");
+	seroutstr("\x1B[");
 	seroutd(row + 1);
 	seroutb(';');
 	seroutd(col + 1);
@@ -47,7 +46,7 @@ static void doescpos(int row, int col)
 /* Resize the terminal window */
 static void doescrsz(int rows, int cols)
 {
-	outstr("\x1B[8;");
+	seroutstr("\x1B[8;");
 	seroutd(rows);
 	seroutb(';');
 	seroutd(cols);
@@ -57,7 +56,7 @@ static void doescrsz(int rows, int cols)
 /* Set scroll region */
 static void doescrgn(int top, int bottom)
 {
-	outstr("\x1B[");
+	seroutstr("\x1B[");
 	seroutd(top + 1);
 	seroutb(';');
 	seroutd(bottom + 1);
@@ -89,7 +88,7 @@ void interrupt int10h(struct pregs r)
 		}
 
 		if (!(r.ax & 0x80)) {
-			outstr("\x1B[H\x1B[2J");	// Clear screen
+			seroutstr("\x1B[m\f\x1B[H\x1B[2J");	// Reset SGR, clear screen
 		}
 
 		BDA[0x49] = r.ax;	// Current mode
@@ -135,9 +134,10 @@ void interrupt int10h(struct pregs r)
 		doescrgn(r.cx >> 8, r.dx >> 8);
 		doescatt(r.bx >> 8);
 		// Scroll up/down, AL=00h to clear the entire window
-		outstr("\x1B[");
+		seroutstr("\x1B[");
 		seroutd((r.ax & 0xFF) ? (r.ax & 0xFF) : ((r.dx >> 8) - (r.cx >> 8)));
 		seroutb((r.ax & 0x0100) ? 'T' : 'S');
+		seroutstr("\x1B[r");	// Reset scroll region now we're done
 		break;
 
 	// 0x08 read character and attribute at cursor, not implemented
@@ -146,9 +146,9 @@ void interrupt int10h(struct pregs r)
 		doescatt(r.bx);		// Page number is ignored
 	case 0x0A:	// Write character at cursor
 		// Output character specified number of times
-		outstr("\x1B[s");	// Do not update cursor (save it)
+		seroutstr("\x1B[s");	// Do not update cursor (save it)
 		for (i = 0; i < r.cx; i++) seroutb(r.ax);
-		outstr("\x1B[u");	// Do not update cursor (restore it)
+		seroutstr("\x1B[u");	// Do not update cursor (restore it)
 		break;
 
 	// 0x0B set background/border/palette, nothing to do on serial
@@ -172,7 +172,7 @@ void interrupt int10h(struct pregs r)
 		strptr = (void far *) (((unsigned long) r.es << 16) | r.bp);
 		doescpos(r.dx >> 8, r.dx & 0xFF);
 		if (!(r.ax & 0x02)) doescatt(r.bx);
-		if (!(r.ax & 0x01)) outstr("\x1B[s");	// Do not update cursor (save it)
+		if (!(r.ax & 0x01)) seroutstr("\x1B[s");	// Do not update cursor (save it)
 
 		for (i = 0; i < r.cx;) {
 			if (r.ax & 0x02) {	// Use attributes in string
@@ -184,7 +184,7 @@ void interrupt int10h(struct pregs r)
 			}
 		}
 
-		if (!(r.ax & 0x01)) outstr("\x1B[u");	// Do not update cursor (restore it)
+		if (!(r.ax & 0x01)) seroutstr("\x1B[u");	// Do not update cursor (restore it)
 		break;
 	}
 }

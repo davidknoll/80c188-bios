@@ -6,7 +6,6 @@
 
 #include "ff.h"
 #include "bios.h"
-#include "iofunc.h"
 #include "ioports.h"
 #include <conio.h>
 

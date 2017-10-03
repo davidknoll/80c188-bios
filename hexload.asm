@@ -1,7 +1,18 @@
 ; Intel hex loader for David's new 80C188
 ; Checksums are ignored. Load SS:SP before starting.
 ; Assemble with:
-; nasm -o hexload.hex -f ith -l hexload.lst hexload.asm
+;   nasm -o hexload.hex -f ith -l hexload.lst hexload.asm
+; Register usage:
+;   CS:IP- can run out of ROM or RAM
+;   SS:SP- can be anywhere as long as it's RAM
+;   DS:SI- used when outputting strings
+;   ES:DI- data load pointer
+;   AX- passing data between subroutines, port I/O
+;   BL- temporary storage of high nibble of input byte
+;   BH- record checksum
+;   CL- byte count
+;   CH- zeroed
+;   DX- used in port I/O
 			[list -]
 			%include "include/ioports.inc"
 			[list +]
@@ -24,6 +35,7 @@ hexload:	cli
 .colon		call serinb						; Start of record
 			cmp al, ':'
 			jnz .colon
+			xor bh, bh						; Clear checksum
 			call serinhb					; Byte count
 			xor cx, cx
 			mov cl, al
@@ -47,6 +59,9 @@ hexload:	cli
 .bad		mov al, '?'						; Bad or unrecognised record
 			call seroutb
 			jmp .colon
+.ckerr		mov al, '!'						; Checksum error
+			call seroutb
+			jmp .colon
 
 .data		and cl, cl						; If it's a data record it must have some data
 			jz .bad
@@ -54,7 +69,9 @@ hexload:	cli
 			stosb
 			loop .data1
 
-.cksum		call serinhb					; Get checksum (but ignore it for now)
+.cksum		call serinhb					; Get checksum
+			and bh, bh
+			jnz .ckerr
 			mov al, '.'						; Good record
 			call seroutb
 			jmp .colon						; Go back for next record
@@ -64,7 +81,9 @@ hexload:	cli
 			and di, di						; If address field is zero, assume it's just an EOF, not a start address, and ignore it
 			jz .cksum
 
-.cksumeof	call serinhb					; Get checksum (but ignore it for now)
+.cksumeof	call serinhb					; Get checksum
+			and bh, bh
+			jnz .ckerr
 			mov al, '*'						; Good record with start address
 			call seroutb
 			mov al, 0Dh
@@ -119,6 +138,7 @@ serinhb:	call serinhn
 			mov bl, al
 			call serinhn
 			or al, bl
+			add bh, al
 			ret
 
 serinhn:	call serinb

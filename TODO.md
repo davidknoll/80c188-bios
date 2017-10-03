@@ -10,7 +10,6 @@ Software
 * Count/detect available memory, anticipating expansion. (Impact on data segment?)
 * Count/detect COM & LPT ports.
 * Expand Int 15h with implementing more "standard" misc functions
-* Detect checksum failures in hex/srec loader (Int 18h and hexload.asm)
 * Kermit/X/Y/ZMODEM downloader, they retry on error unlike a basic hex loader
 * For that matter, what other utilities could be included?
 * And let's have a hotkey to interrupt normal boot sequence
@@ -25,6 +24,8 @@ Software
 
 Done-ish
 * The terminal doesn't clear when I type CLS in DOS, or start FDISK- text is just overlayed
-* * It does clear now, after I extended Int 10h / AH = 00h. But scrolling goes weird- 24 vs 25 lines?
+  * It does clear now, after I extended Int 10h / AH = 00h. But scrolling goes weird- 24 vs 25 lines?
 * BIOS's own console I/O should use Int 10h/16h, so other devices could substitute their oproms
-* * Done but still need to test oproms, and do C0000h early as a special case for video
+  * Done but still need to test oproms, and do C0000h early as a special case for video
+* Detect checksum failures in hex/srec loader (Int 18h and hexload.asm)
+  * Are indicated with a ! but loading will continue and valid exec addresses will still be taken

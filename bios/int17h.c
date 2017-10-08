@@ -12,6 +12,27 @@
 #define lptstat (lptbase+1)
 #define lptctl (lptbase+2)
 
+/* Probe parallel ports and record in BIOS data area */
+void probe_lpt(void)
+{
+	unsigned int lptio[] = { 0x3BC, 0x378, 0x278 };
+	int lptcnt, lptidx;
+
+	for (lptcnt = lptidx = 0; lptidx < 4 && lptcnt < 3; lptidx++) {
+		outportb(lptio[lptidx], 0xAA);		// Test pattern
+		outportb(0xC0, 0xFF);				// Noise
+		if (inportb(lptio[lptidx]) == 0xAA) {
+			// Found a port
+			BDA[lptcnt << 1] = lptio[lptidx];
+			BDA[(lptcnt << 1) + 1] = lptio[lptidx] >> 8;
+			lptcnt++;
+		}
+	}
+
+	BDA[0x11] &= 0x3F;
+	BDA[0x11] |= (lptcnt & 0x3) << 6;
+}
+
 void interrupt int17h(struct pregs r)
 {
 	int i;

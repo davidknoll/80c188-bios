@@ -8,7 +8,6 @@ Hardware
 
 Software
 * Count/detect available memory, anticipating expansion. (Impact on data segment?)
-* Count/detect COM & LPT ports.
 * Expand Int 15h with implementing more "standard" misc functions
 * Kermit/X/Y/ZMODEM downloader, they retry on error unlike a basic hex loader
 * For that matter, what other utilities could be included?
@@ -29,3 +28,4 @@ Done-ish
   * Done but still need to test oproms, and do C0000h early as a special case for video
 * Detect checksum failures in hex/srec loader (Int 18h and hexload.asm)
   * Are indicated with a ! but loading will continue and valid exec addresses will still be taken
+* Count/detect COM & LPT ports.

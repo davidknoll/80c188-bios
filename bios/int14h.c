@@ -62,6 +62,27 @@ static const unsigned char paritbl[] = {
 	0, 0, 0	// Invalid
 };
 
+/* Probe serial ports and record in BIOS data area */
+void probe_com(void)
+{
+	unsigned int comio[] = { UART_BASE, 0x3F8, 0x2F8, 0x3E8, 0x2E8 };
+	int comcnt, comidx;
+
+	for (comcnt = comidx = 0; comidx < 5 && comcnt < 4; comidx++) {
+		outportb(comio[comidx] + 3, 0x1A);	// LCR to 7E1
+		outportb(0xC0, 0xFF);				// Noise
+		if (inportb(comio[comidx] + 3) == 0x1A) {
+			// Found a port
+			BDA[comcnt << 1] = comio[comidx];
+			BDA[(comcnt << 1) + 1] = comio[comidx] >> 8;
+			comcnt++;
+		}
+	}
+
+	BDA[0x11] &= 0xF1;
+	BDA[0x11] |= (comcnt & 0x7) << 1;
+}
+
 void interrupt int14h(struct pregs r)
 {
 	int i;

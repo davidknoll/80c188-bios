@@ -125,8 +125,6 @@ int main()
 	IVT[0x4A] = intnul;							// User RTC alarm
 
 	// Set a few things in the BIOS data area, although we don't do much with it
-	//*((volatile unsigned int far *) (BDA+0x00)) = UART_BASE;	// COM1 base address
-	//*((volatile unsigned int far *) (BDA+0x08)) = PPI_BASE;	// LPT1 base address
 	*((volatile unsigned int far *) (BDA+0x10)) = 0x0041;		// Equipment word
 #ifdef TESTING
 	*((volatile unsigned int far *) (BDA+0x13)) = 512 - 64;		// Memory size
@@ -140,6 +138,8 @@ int main()
 	*((volatile unsigned char far *) (BDA+0x84)) = 23;			// Rows - 1
 
 	timinit();
+	probe_com();
+	probe_lpt();
 	// Init UART to 38400/8N1
 	// Not going through Int 14h, as the UART is being used for the main console
 	serinit(0x03, F_UART / (16 * 38400UL));

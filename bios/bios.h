@@ -179,3 +179,7 @@ extern void conouthw(unsigned int i);
 extern int bintobcd(int i);
 extern int bcdtobin(int i);
 extern void panic(const char *msg);
+
+/* System initialisation */
+extern void probe_com(void);
+extern void probe_lpt(void);

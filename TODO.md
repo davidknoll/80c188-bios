@@ -12,7 +12,6 @@ Software
 * Kermit/X/Y/ZMODEM downloader, they retry on error unlike a basic hex loader
 * For that matter, what other utilities could be included?
 * And let's have a hotkey to interrupt normal boot sequence
-* DOS on boot thinks time is 12:00, but can set RTC, date is read OK (think tick count?)
 * Test the oprom functionality, for that matter
 * Flash updating the ROM in-system
 * Test all interrupts (think the RTC one was dodgy), use them
@@ -29,3 +28,4 @@ Done-ish
 * Detect checksum failures in hex/srec loader (Int 18h and hexload.asm)
   * Are indicated with a ! but loading will continue and valid exec addresses will still be taken
 * Count/detect COM & LPT ports.
+* DOS on boot thinks time is 12:00, but can set RTC, date is read OK (think tick count?)

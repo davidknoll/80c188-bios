@@ -41,6 +41,7 @@ static void clrmem(void)
 static void timinit(void)
 {
 	unsigned long newticks;
+	unsigned int newticksh;
 	unsigned char hr, min, sec;
 
 	// Rate is 10MHz / (4 * 71 * 1934) = 18.206446539Hz
@@ -64,9 +65,11 @@ static void timinit(void)
 		(bcdtobin(min) * 1093UL) +	// 1092.38679234
 		(bcdtobin(sec) * 18UL);		// 18.206446539
 
+	// Using newticks+2 in asm below was adding to the value not the pointer
+	newticksh = newticks >> 16;
 	asm {
 		mov ah, 01h		// Set tick count
-		mov cx, newticks+2
+		mov cx, newticksh
 		mov dx, newticks
 		int 1Ah
 	}

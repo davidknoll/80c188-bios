@@ -1,7 +1,7 @@
 			bits 16
 			cpu 186
 F_CPU		equ 10000000
-F_UART		equ 2457600
+F_UART		equ 1843200
 			%define uartdll(baud) (F_UART/(16*baud)) & 0FFh
 			%define uartdlm(baud) (F_UART/(16*baud)) >> 8
 

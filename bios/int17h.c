@@ -8,9 +8,9 @@
 #include <conio.h>
 #include "bios.h"
 
-#define lptdata lptbase
-#define lptstat (lptbase+1)
-#define lptctl (lptbase+2)
+#define lptdata	lptbase
+#define lptstat	(lptbase + 1)
+#define lptctl	(lptbase + 2)
 
 /* Probe parallel ports and record in BIOS data area */
 void probe_lpt(void)
@@ -19,8 +19,8 @@ void probe_lpt(void)
 	int lptcnt, lptidx;
 
 	for (lptcnt = lptidx = 0; lptidx < 4 && lptcnt < 3; lptidx++) {
-		outportb(lptio[lptidx], 0xAA);		// Test pattern
-		outportb(0xC0, 0xFF);				// Noise
+		outportb(lptio[lptidx], 0xAA);	// Test pattern
+		outportb(0xC0, 0xFF);			// Noise
 		if (inportb(lptio[lptidx]) == 0xAA) {
 			// Found a port
 			BDA[lptcnt << 1] = lptio[lptidx];
@@ -29,6 +29,7 @@ void probe_lpt(void)
 		}
 	}
 
+	// Number of ports found
 	BDA[0x11] &= 0x3F;
 	BDA[0x11] |= (lptcnt & 0x3) << 6;
 }
@@ -38,14 +39,17 @@ void interrupt int17h(struct pregs r)
 	int i;
 	unsigned int lptbase;
 	sti();
+
+	// Look up I/O address of that LPT port number in the BDA
 	if (r.dx > 3) return;
-	lptbase = *((volatile unsigned int far *) (BDA+0x08+(r.dx<<1)));
+	lptbase = *((volatile unsigned int far *) (BDA + 0x08 + (r.dx << 1)));
 	if (!lptbase) return;
+
 	switch (r.ax >> 8) {	// Function number in AH
 
 	case 0x00:	// Output byte
 		outportb(lptdata, r.ax);			// Data
-		for (i=32000;i>0;i--) {
+		for (i = 32000; i > 0; i--) {
 			if (inportb(lptstat) & 0x80) {
 				outportb(lptctl, 0x0D);		// Pulse strobe pin
 				outportb(lptctl, 0x0C);
@@ -67,7 +71,7 @@ void interrupt int17h(struct pregs r)
 
 	case 0x01:	// Initialise
 		outportb(lptctl, 0x08);				// Pulse init pin
-		for (i=0x5DC;i>0;i--);				// Delay
+		for (i = 0x5DC; i > 0; i--);		// Delay
 		outportb(lptctl, 0x0C);
 
 	case 0x02:	// Get status

@@ -1,7 +1,5 @@
 #define F_CPU		10000000UL		/* CPU frequency is 1/2 the xtal */
-#define F_UART		2457600UL		/* UART baud rate xtal */
-#define uartdll(baud) ((F_UART/(16*baud)) & 0xFF)
-#define uartdlm(baud) (((F_UART/(16*baud)) >> 8) & 0xFF)
+#define F_UART		1843200UL		/* UART baud rate xtal */
 
 /* External peripheral interface */
 #define EP_BASE		0xF800

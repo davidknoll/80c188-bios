@@ -1,43 +1,26 @@
 /* Interrupt 14h
  * BIOS serial port services
  * Based partly on the anonymous 8088/V20 Turbo XT BIOS
- * On my board the UART uses a 2.4576MHz xtal, normally it's 1.8432MHz
  */
 #include <conio.h>
 #include "bios.h"
 #include "ioports.h"
 
-#define uartrbr uartbase
-#define uartthr uartbase
-#define uartier (uartbase+1)
-#define uartiir (uartbase+2)
-#define uartlcr (uartbase+3)
-#define uartmcr (uartbase+4)
-#define uartlsr (uartbase+5)
-#define uartmsr (uartbase+6)
-#define uartscr (uartbase+7)
-#define uart_dll uartbase
-#define uart_dlm (uartbase+1)
+#define uartrbr	uartbase
+#define uartthr	uartbase
+#define uartier	(uartbase + 1)
+#define uartiir	(uartbase + 2)
+#define uartlcr	(uartbase + 3)
+#define uartmcr	(uartbase + 4)
+#define uartlsr	(uartbase + 5)
+#define uartmsr	(uartbase + 6)
+#define uartscr	(uartbase + 7)
+#define uartdll	uartbase
+#define uartdlm	(uartbase + 1)
 
 /* Baud rate divisor table */
 static const unsigned int baudtbl[] = {
-	// Standard baud rate crystal, 1.8432MHz
-	1843200UL / (16 * 110UL),		// Available with AH=00h
-	1843200UL / (16 * 150UL),
-	1843200UL / (16 * 300UL),
-	1843200UL / (16 * 600UL),
-	1843200UL / (16 * 1200UL),
-	1843200UL / (16 * 2400UL),
-	1843200UL / (16 * 4800UL),
-	1843200UL / (16 * 9600UL),
-	1843200UL / (16 * 19200UL),		// Available with AH=04h
-	1843200UL / (16 * 38400UL),		// Available with ComShare
-	1843200UL / (16 * 57600UL),
-	1843200UL / (16 * 115200UL),
-	0, 0, 0, 0,						// Invalid
-
-	// Used on my board, 2.4576MHz
-	F_UART / (16 * 110UL),			// Available with AH=00h
+	F_UART / (16 * 110UL),		// Available with AH=00h
 	F_UART / (16 * 150UL),
 	F_UART / (16 * 300UL),
 	F_UART / (16 * 600UL),
@@ -45,11 +28,11 @@ static const unsigned int baudtbl[] = {
 	F_UART / (16 * 2400UL),
 	F_UART / (16 * 4800UL),
 	F_UART / (16 * 9600UL),
-	F_UART / (16 * 19200UL),		// Available with AH=04h
-	F_UART / (16 * 38400UL),		// Available with ComShare
+	F_UART / (16 * 19200UL),	// Available with AH=04h
+	F_UART / (16 * 38400UL),	// Available with ComShare
 	F_UART / (16 * 57600UL),
 	F_UART / (16 * 115200UL),
-	0, 0, 0, 0						// Invalid
+	0, 0, 0, 0					// Invalid
 };
 
 /* Parity mode mask table */
@@ -79,6 +62,7 @@ void probe_com(void)
 		}
 	}
 
+	// Number of ports found
 	BDA[0x11] &= 0xF1;
 	BDA[0x11] |= (comcnt & 0x7) << 1;
 }
@@ -97,12 +81,9 @@ void interrupt int14h(struct pregs r)
 	switch (r.ax >> 8) {	// Function number in AH
 
 	case 0x00:	// Initialise port
-		// If this UART is controlled by the 80C188's onboard chip selects,
-		// use the alternative baud rate divisors
-		i = (uartbase >= EP_BASE && uartbase < EP_BASE + 0x400) ? 0x10 : 0;
 		outportb(uartlcr, 0x80);							// Set DLAB
-		outportb(uart_dll, baudtbl[(r.ax >> 5) | i]);		// Baud rate divisor
-		outportb(uart_dlm, baudtbl[(r.ax >> 5) | i] >> 8);
+		outportb(uartdll, baudtbl[r.ax >> 5]);				// Baud rate divisor
+		outportb(uartdlm, baudtbl[r.ax >> 5] >> 8);
 		outportb(uartlcr, r.ax & 0x1F);						// Clear DLAB, set other parameters
 		outportb(uartier, 0x00);							// Disable interrupts
 		r.ax = (inportb(uartlsr) << 8) | inportb(uartmsr);	// Return LSR & MSR
@@ -141,12 +122,9 @@ void interrupt int14h(struct pregs r)
 		break;
 
 	case 0x04:	// Extended initialise (on Convertible & PS)
-		// If this UART is controlled by the 80C188's onboard chip selects,
-		// use the alternative baud rate divisors
-		i = (uartbase >= EP_BASE && uartbase < EP_BASE + 0x400) ? 0x10 : 0;
 		outportb(uartlcr, 0x80);							// Set DLAB
-		outportb(uart_dll, baudtbl[(r.cx & 0x0F) | i]);		// Baud rate divisor
-		outportb(uart_dlm, baudtbl[(r.cx & 0x0F) | i] >> 8);
+		outportb(uartdll, baudtbl[r.cx & 0x0F]);			// Baud rate divisor
+		outportb(uartdlm, baudtbl[r.cx & 0x0F] >> 8);
 		outportb(uartlcr,
 			((r.ax & 0x01) << 6) |							// Break
 			((r.bx & 0x01) << 2) |							// Stop bits

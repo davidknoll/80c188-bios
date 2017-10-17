@@ -4,7 +4,6 @@ Ideas
 Hardware
 * What to put on an expansion besides more RAM? IDE? CRTC/terminal?
 * Where are those other 512KB SRAM chips, a DS1250 is unnecessary
-* Change baud rate xtal to more standard 1.8432MHz
 
 Software
 * Count/detect available memory, anticipating expansion. (Impact on data segment?)
@@ -29,3 +28,5 @@ Done-ish
   * Are indicated with a ! but loading will continue and valid exec addresses will still be taken
 * Count/detect COM & LPT ports.
 * DOS on boot thinks time is 12:00, but can set RTC, date is read OK (think tick count?)
+  * Minute is still coming up as 0?
+* Change baud rate xtal to more standard 1.8432MHz

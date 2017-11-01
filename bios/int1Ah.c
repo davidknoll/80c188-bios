@@ -72,9 +72,31 @@ void interrupt int1Ah(struct pregs r)
 		break;
 
 	//case 0x08:	// Set RTC power-on (PC Convertible)
-	//case 0x09:	// Read RTC alarm and status (PC Convertible)
-	//case 0x0A:	// Read system timer day counter (some XTs only)
-	//case 0x0B:	// Set system timer day counter (some XTs only)
+
+	case 0x09:	// Read RTC alarm and status (PC Convertible)
+		r.cx = (inportb(RTC_HRAL) << 8) | inportb(RTC_MINAL);
+		r.dx = (inportb(RTC_SECAL) << 8) | ((inportb(RTC_CTLB) & 0x20) >> 5);
+		break;
+
+	case 0x0A:	// Read system timer day counter (some XTs only)
+		r.cx = *((volatile unsigned int far *) (BDA+0xCE));	// Days since 01/01/1980
+		break;
+
+	case 0x0B:	// Set system timer day counter (some XTs only)
+		*((volatile unsigned int far *) (BDA+0xCE)) = r.cx;
+		break;
+
+	//case 0x0C:	// Set RTC date/time activated power-on
+	//case 0x0D:	// Reset RTC date/time activated power-on
+	//case 0x0E:	// Get RTC date/time alarm status
+
+	case 0x0F:	// Initialise RTC
+		outportb(RTC_CTLA, 0x20);	// Enable oscillator, no SQW
+		outportb(RTC_CTLB, 0x02);	// BCD & 24h mode, no DSE as its rules don't match the UK
+		inportb(RTC_CTLC);			// Clear interrupt flags
+		// DS17x87 extended control registers not supported (yet)
+		break;
+
 	//case 0x80:	// Set sound multiplexer (PCjr only)
 	default:
 		r.flags |= F_C;	// For these functions, indicates not supported

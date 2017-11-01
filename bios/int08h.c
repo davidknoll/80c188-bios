@@ -13,12 +13,14 @@ void interrupt int08h(void)
 	// Pointers into the BIOS data area
 	volatile unsigned long far *ticks = (void far *) (BDA+0x6C);	// 0040:006C
 	volatile unsigned char far *midnight = (void far *) (BDA+0x70);	// 0040:0070
+	volatile unsigned int far *daycount = (void far *) (BDA+0xCE);	// 0040:00CE
 
 	sti();
 	(*ticks)++;
 	if (*ticks >= 1573037UL) {	// Exceeded 24 hours
 		*ticks = 0;
 		(*midnight)++;
+		(*daycount)++;
 	}
 	asm int 1Ch;				// Call user timer tick routine
 	outport(IIM_EOI, 0x0008);	// Specific EOI for the timers

@@ -39,19 +39,19 @@
 
 
 #define DO_INIT()					/* Initialize port for MMC DO as input */
-#define DO			(!(inportb(UART_MSR) & (1<<5)))	/* Test for MMC DO ('H':true, 'L':false) */
+#define DO			(inportb(PPI_PB) & (1<<0))	/* Test for MMC DO ('H':true, 'L':false) */
 
 #define DI_INIT()					/* Initialize port for MMC DI as output */
-#define DI_H()		outportb(UART_MCR, inportb(UART_MCR) & ~(1<<0))	/* Set MMC DI "high" */
-#define DI_L()		outportb(UART_MCR, inportb(UART_MCR) |  (1<<0))	/* Set MMC DI "low" */
+#define DI_H()		outportb(PPI_CTL, 0x01 | (0<<1))	/* Set MMC DI "high" */
+#define DI_L()		outportb(PPI_CTL, 0x00 | (0<<1))	/* Set MMC DI "low" */
 
 #define CK_INIT()					/* Initialize port for MMC SCLK as output */
-#define CK_H()		outportb(UART_MCR, inportb(UART_MCR) & ~(1<<3))	/* Set MMC SCLK "high" */
-#define	CK_L()		outportb(UART_MCR, inportb(UART_MCR) |  (1<<3))	/* Set MMC SCLK "low" */
+#define CK_H()		outportb(PPI_CTL, 0x01 | (1<<1))	/* Set MMC SCLK "high" */
+#define	CK_L()		outportb(PPI_CTL, 0x00 | (1<<1))	/* Set MMC SCLK "low" */
 
 #define CS_INIT()					/* Initialize port for MMC CS as output */
-#define	CS_H()		outportb(UART_MCR, inportb(UART_MCR) & ~(1<<2))	/* Set MMC CS "high" */
-#define CS_L()		outportb(UART_MCR, inportb(UART_MCR) |  (1<<2))	/* Set MMC CS "low" */
+#define	CS_H()		outportb(PPI_CTL, 0x01 | (2<<1))	/* Set MMC CS "high" */
+#define CS_L()		outportb(PPI_CTL, 0x00 | (2<<1))	/* Set MMC CS "low" */
 
 
 static

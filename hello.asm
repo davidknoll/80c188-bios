@@ -9,8 +9,8 @@
 			section .text start=0100h
 begin:		cld
 			outp uart_lcr, 83h	; Enable DLAB
-			outp uart_dll, uartdll(38400)	; Baud rate divisor
-			outp uart_dlm, uartdlm(38400)
+			outp uart_dll, uartdll(115200)	; Baud rate divisor
+			outp uart_dlm, uartdlm(115200)
 			outp uart_lcr, 03h	; Disable DLAB, set 8N1
 
 			mov ax, cs			; Output message

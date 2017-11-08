@@ -97,20 +97,20 @@ static void oproms(void)
 			if (!chksum(curoprom, curoprom[2] * 512)) {
 				// Correct checksum
 				(*((void (far *)(void)) (curoprom+3)))();
-				opromseg += curoprom[2] * (512/16);
+				opromseg += curoprom[2] * (512 / 16);
 				if (curoprom[2] & 3) {
 					// Option ROM is not a multiple of 2KB in size
-					opromseg += 2048/16;
-					opromseg &= ~((2048/16)-1);
+					opromseg += 2048 / 16;
+					opromseg &= ~((2048 / 16) - 1);
 				}
 
 			} else {
 				// Incorrect checksum
-				opromseg += 2048/16;
+				opromseg += 2048 / 16;
 			}
 		} else {
 			// No option ROM identifier here
-			opromseg += 2048/16;
+			opromseg += 2048 / 16;
 		}
 	}
 }
@@ -122,10 +122,10 @@ int main()
 	clrmem();
 
 	// Init interrupt vectors
-	for (i=0;i<0x20;i++) IVT[i] = defivt[i];	// CPU, hardware, BIOS
-	for (i=0x20;i<0x100;i++) IVT[i] = intunh;	// Unused, shouldn't happen yet
-	IVT[0x41] = (void far *) &deffdpt;			// Fixed disk parameter table
-	IVT[0x4A] = intnul;							// User RTC alarm
+	for (i = 0; i < 0x20; i++) IVT[i] = defivt[i];	// CPU, hardware, BIOS
+	for (i = 0x20; i < 0x100; i++) IVT[i] = intunh;	// Unused, shouldn't happen yet
+	IVT[0x41] = (void far *) &deffdpt;				// Fixed disk parameter table
+	IVT[0x4A] = intnul;								// User RTC alarm
 
 	// Set a few things in the BIOS data area, although we don't do much with it
 	*((volatile unsigned int far *) (BDA+0x10)) = 0x0041;		// Equipment word
@@ -143,13 +143,13 @@ int main()
 	timinit();
 	probe_com();
 	probe_lpt();
-	// Init UART to 38400/8N1
+	// Init UART to 115200/8N1
 	// Not going through Int 14h, as the UART is being used for the main console
-	serinit(0x03, F_UART / (16 * 38400UL));
-	// Init 8255 to all inputs in case of contention
+	serinit(0x03, F_UART / (16 * 115200UL));
+	// Init 8255 to mode 1 output on port A, mode 0 input on port B, output on port C
 	// Not going through Int 17h, as an 8255 is not the same thing as an LPT port
-	// If adapting it to use as an LPT port, 0x82 would be more appropriate
-	outportb(PPI_CTL, 0x9B);
+	// If adapting it to use as an LPT port, 0x82 might be more appropriate
+	outportb(PPI_CTL, 0xA2);
 	sti();
 
 	// Sign-on message

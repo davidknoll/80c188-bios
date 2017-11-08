@@ -21,15 +21,15 @@
 hexload:	cli
 			cld
 			outp uart_lcr, 83h				; Enable DLAB
-			outp uart_dll, uartdll(38400)	; Baud rate divisor
-			outp uart_dlm, uartdlm(38400)
+			outp uart_dll, uartdll(115200)	; Baud rate divisor
+			outp uart_dlm, uartdlm(115200)
 			outp uart_lcr, 03h				; Disable DLAB, set 8N1
 
 			mov ax, cs						; Output message
 			mov ds, ax
 			mov si, tx_hello
 			call outstr
-			mov ax, 0050h					; Default to load segment 0050h
+			xor ax, ax						; Default to load segment 0000h
 			mov es, ax
 
 .colon		call serinb						; Start of record

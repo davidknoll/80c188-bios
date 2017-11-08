@@ -35,16 +35,16 @@ begin:		cli
 			jmp 0F000h:0000h		; Continue to body of ROM
 
 table		db_lo ics_umcs			; ROM
-			dw 0E03Dh				; 128KB, 1 wait state, no external ready
+			dw 0E03Ch				; 128KB, no wait states, no external ready
 			db_lo ics_mmcs			; RAM
 			dw 01FCh				; 00000h, no wait states, no external ready
 			db_lo ics_mpcs			; /MCSx size, /PCSx configuration
-			dw 0C0B9h				; 512KB, 7 /PCSx, I/O space, 1 wait state, external ready
+			dw 0C0BCh				; 512KB, 7 /PCSx, I/O space, no wait states, no external ready
 			db_lo ics_pacs			; External peripherals
-			dw 0FB9h				; F800h, 1 wait state, external ready
+			dw 0FBCh				; F800h, no wait states, no external ready
 tablecnt	equ ($-table)/3
 
 			setloc 0F0h				; Reset entry is FFFF:0000h
 			jmp 0F000h:begin		; Jump to the startup code above
-			db "02/04/14", 00h		; BIOS date (mm/dd/yy)
-			db 0FEh, 0FFh			; Model identifier (FEh is a 1982 XT)
+			db "11/05/17", 00h		; BIOS date (mm/dd/yy)
+			db 0FBh, 0FFh			; Model identifier (FBh is a 1986 XT)

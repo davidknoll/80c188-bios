@@ -11,7 +11,7 @@ static FIL fatfsfile[FILES];
 // Table returned by AH=C0h (Get Configuration)
 static const unsigned char cfgtbl[] = {
 	0x08, 0x00,						// Number of bytes following
-	0xFE, 0x00,						// Model (here XT), submodel
+	0xFB, 0x00,						// Model (here 1986 XT), submodel
 	0x00,							// BIOS revision
 	0x20, 0x44, 0x00, 0x48, 0x01	// Features
 };

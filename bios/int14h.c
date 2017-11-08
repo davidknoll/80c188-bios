@@ -48,7 +48,7 @@ static const unsigned char paritbl[] = {
 /* Probe serial ports and record in BIOS data area */
 void probe_com(void)
 {
-	unsigned int comio[] = { UART_BASE, 0x3F8, 0x2F8, 0x3E8, 0x2E8 };
+	unsigned int comio[] = { 0x3F8, 0x2F8, 0x3E8, 0x2E8 };
 	int comcnt, comidx;
 
 	for (comcnt = comidx = 0; comidx < 5 && comcnt < 4; comidx++) {

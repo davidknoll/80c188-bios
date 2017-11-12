@@ -1,12 +1,13 @@
 ; Basic test of RTC tick for David's new 80C188
 ; Assemble with:
-; nasm -o rtctest.srec -f srec -l rtctest.lst rtctest.asm
+; nasm -o rtctest.hex -f ith -l rtctest.lst rtctest.asm
 			[list -]
 			%include "include/ioports.inc"
 			%include "include/sndmacro.inc"
 			[list +]
 
-			section .text start=10000h vstart=0f0000h
+;			section .text start=10000h vstart=0f0000h
+			section .text start=0100h
 begin:		outp rtc_ctla, 20h		; Control A
 			outp rtc_ctlb, 82h		; Control B
 			outp rtc_sec, 00h		; Seconds

@@ -1,12 +1,13 @@
 ; Beep, call/return, UART bus test program for David's new 80C188
 ; Assemble with:
-; nasm -o beep.srec -f srec -l beep.lst beep.asm
+; nasm -o beep.hex -f ith -l beep.lst beep.asm
 			[list -]
 			%include "include/ioports.inc"
 			%include "include/sndmacro.inc"
 			[list +]
 
-			section .text start=10000h, vstart=0f0000h
+;			section .text start=10000h, vstart=0f0000h
+			section .text start=0100h
 begin:		outp uart_mcr, 0fh	; Set /DTR, /RTS, /OUT1, /OUT2 low
 			call tune
 			call del4

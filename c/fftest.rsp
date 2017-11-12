@@ -1,3 +1,3 @@
 /t /m +
-crt0ram.obj fftest.obj iofunc.obj fatfs\ff.obj fatfs\sdmm.obj fatfs\option\unicode.obj +
-, fftest.com, fftest.map, ct.lib
+crt0ram.obj fftest.obj iofunc.obj +
+, fftest.com, fftest.map, ct.lib ..\fatfs\fatfs_mt.lib

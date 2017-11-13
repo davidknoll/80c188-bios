@@ -1,4 +1,6 @@
+#include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 
 unsigned char eject(unsigned char drive)
 {
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (strcmp("/e", argv[1])) {
-		rtn = insert(drive, argv[1], 0x02);
+		rtn = insert(drive, argv[1], mode);
 		if (rtn) {
 			fprintf(stderr, "Failed to mount %s on drive %c with error %02Xh.\n", argv[1], drive + 'A', rtn);
 		} else {
@@ -61,6 +63,17 @@ int main(int argc, char *argv[])
 	return rtn;
 
 usage:
-	fprintf(stderr, "Usage: %s imgfile drive:\n", argv[0]);
+	fprintf(stderr, "\
+Mounts disk images from the SD card. For use with David's 80C188 SBC BIOS.\n\
+\n\
+Usage: imgmount [imgfile | /e] drive: [/ro | /rw | /rwn | /rwc]\n\
+  imgfile  Disk image file to mount, relative to the root of the SD card\n\
+  drive    Virtual drive to mount it to, A: or B:\n\
+  /e       Just eject the current image, rather than mounting a new one\n\
+  /ro      Mount the new image read-only  (must exist)\n\
+  /rw      Mount the new image read-write (must exist, default)\n\
+  /rwn     Mount the new image read-write (create if necessary)\n\
+  /rwc     Mount the new image read-write (create, must not exist)\n\
+");
 	return 1;
 }

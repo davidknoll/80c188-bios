@@ -8,3 +8,4 @@
 *.map
 *.obj
 *.rom
+!libhy18/font.bin

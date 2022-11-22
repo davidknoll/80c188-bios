@@ -12,9 +12,11 @@ extern void outstr(const char *s);
 extern void serouthn(unsigned char c);
 extern void serouthb(unsigned char c);
 extern void serouthw(unsigned int i);
+extern void serouthl(unsigned long l);
 extern unsigned char serinhn(void);
 extern unsigned char serinhb(void);
 extern unsigned int serinhw(void);
+extern unsigned long serinhl(void);
 
 extern int bintobcd(int i);
 extern int bcdtobin(int i);

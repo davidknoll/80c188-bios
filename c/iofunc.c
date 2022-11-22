@@ -96,6 +96,12 @@ void serouthw(unsigned int i)
 	serouthb(i);
 }
 
+void serouthl(unsigned long l)
+{
+	serouthw(l >> 16);
+	serouthw(l);
+}
+
 /* Input a hex number */
 unsigned char serinhn(void)
 {
@@ -119,6 +125,13 @@ unsigned int serinhw(void)
 	unsigned int i = serinhb() << 8;
 	i |= serinhb();
 	return i;
+}
+
+unsigned long serinhl(void)
+{
+	unsigned long l = serinhw() << 16;
+	l |= serinhw();
+	return l;
 }
 
 /* Convert a number to (4-digit) BCD */

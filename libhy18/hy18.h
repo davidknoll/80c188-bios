@@ -72,6 +72,10 @@
 #define YELLOW  ~BLUE
 #define WHITE   ~BLACK
 
+// Constants related to SD card support
+#define SD_MAX_TRIES   1500
+#define SD_SECTOR_SIZE  512
+
 // spi.c
 extern void lcdoutbn(const unsigned char *buf, unsigned int len);
 extern void lcdoutwr(unsigned int w, unsigned int cnt);
@@ -105,3 +109,23 @@ extern void gfx_textcharopaque(char c, int x, int y, int fgcol, int bgcol);
 
 // term.c
 extern void gfx_termoutc(unsigned char c);
+
+// sdcard.c
+extern unsigned char spi_iob(unsigned char obyte);
+extern void spi_init(void);
+extern const unsigned char crc7_table[];
+extern unsigned char crc7_add(unsigned char crc, unsigned char data);
+extern unsigned char sd_sendcmd(unsigned char cmd, unsigned long arg);
+extern void sd_release(void);
+extern unsigned char sd_readdata(unsigned char *buf, int len);
+extern unsigned char sd_writedata(unsigned char *buf, int len);
+extern unsigned long sd_response(void);
+extern unsigned char sdc_readsector(unsigned char *buf, unsigned long lba);
+extern unsigned char sdc_writesector(unsigned char *buf, unsigned long lba);
+extern unsigned char sdc_readcsd(unsigned char *buf);
+extern unsigned char sdc_readcid(unsigned char *buf);
+extern unsigned long sdc_getsectors(void);
+extern unsigned char sdc_readocr(unsigned long *ocr);
+extern unsigned char sdc_discard(unsigned long lbastart, unsigned long lbaend);
+extern unsigned int sdc_readstatus(unsigned char *buf);
+extern unsigned char sdc_init(void);

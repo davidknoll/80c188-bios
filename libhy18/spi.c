@@ -39,7 +39,7 @@ void lcdoutwr(unsigned int w, unsigned int cnt)
 void lcdreset(void)
 {
   int i;
-  outportb(PPI_CTL, (inportb(PPI_CTL) & ~0x09) | 0x80); // Port C output
+  outportb(PPI_CTL, 0xA2); // Mode
   outportb(PPI_CTL, 0x0B); // Set LCD /CS
   outportb(PPI_CTL, 0x05); // Set SD /CS
   outportb(PPI_CTL, 0x03); // Set SCK

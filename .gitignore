@@ -9,3 +9,4 @@
 *.obj
 *.rom
 !libhy18/font.bin
+libhy18/font.c

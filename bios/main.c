@@ -138,17 +138,18 @@ int main()
 	*((volatile unsigned int far *) (BDA+0x4A)) = 80;			// Columns
 	*((volatile unsigned int far *) (BDA+0x72)) = 0x1234;		// POST flag
 	*((volatile unsigned char far *) (BDA+0x75)) = 1;			// Number of HDD
-	*((volatile unsigned char far *) (BDA+0x84)) = 23;			// Rows - 1
+	*((volatile unsigned char far *) (BDA+0x84)) = 24;			// Rows - 1
 
 	timinit();
 	probe_com();
 	probe_lpt();
-	// Init UART to 115200/8N1
+	// Init UART to 38400/8N1
 	// Not going through Int 14h, as the UART is being used for the main console
-	serinit(0x03, F_UART / (16 * 115200UL));
+#ifndef TESTING
+	serinit(0x03, F_UART / (16 * 38400UL));
+#endif
 	// Init 8255 to mode 1 output on port A, mode 0 input on port B, output on port C
 	// Not going through Int 17h, as an 8255 is not the same thing as an LPT port
-	// If adapting it to use as an LPT port, 0x82 might be more appropriate
 	outportb(PPI_CTL, 0xA2);
 	sti();
 

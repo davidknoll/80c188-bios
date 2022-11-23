@@ -2,4 +2,4 @@
 crt0rom.obj console.obj ddptfdpt.obj int08h.obj int10h.obj int13h.obj +
 int14h.obj int15h.obj int16h.obj int17h.obj int18h.obj int19h.obj +
 int1Ah.obj intcpu.obj main.obj serial.obj patb.obj +
-, bios.exe, bios.map, cc.lib ..\fatfs\fatfs_mc.lib
+, bios.exe, bios.map, cc.lib ..\fatfs\fatfs_mc.lib ..\libhy18\hy18_mc.lib

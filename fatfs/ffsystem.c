@@ -1,8 +1,6 @@
 /*------------------------------------------------------------------------*/
-/* Sample code of OS dependent controls for FatFs                         */
-/* (C)ChaN, 2017                                                          */
+/* A Sample Code of User Provided OS Dependent Functions for FatFs        */
 /*------------------------------------------------------------------------*/
-
 
 #include "ff.h"
 #include "bios.h"
@@ -10,38 +8,40 @@
 #include <conio.h>
 
 
-
-#if FF_USE_LFN == 3	/* Dynamic memory allocation */
+#if FF_USE_LFN == 3	/* Use dynamic memory allocation */
 #error Can't use the heap for LFN buffers, there is no heap set up
 
 /*------------------------------------------------------------------------*/
-/* Allocate a memory block                                                */
+/* Allocate/Free a Memory Block                                           */
 /*------------------------------------------------------------------------*/
 
-void* ff_memalloc (	/* Returns pointer to the allocated memory block (null on not enough core) */
+#include <stdlib.h>		/* with POSIX API */
+
+
+void* ff_memalloc (	/* Returns pointer to the allocated memory block (null if not enough core) */
 	UINT msize		/* Number of bytes to allocate */
 )
 {
-	return malloc(msize);	/* Allocate a new memory block with POSIX API */
+	return malloc((size_t)msize);	/* Allocate a new memory block */
 }
 
 
-/*------------------------------------------------------------------------*/
-/* Free a memory block                                                    */
-/*------------------------------------------------------------------------*/
-
 void ff_memfree (
-	void* mblock	/* Pointer to the memory block to free */
+	void* mblock	/* Pointer to the memory block to free (no effect if null) */
 )
 {
-	free(mblock);	/* Free the memory block with POSIX API */
+	free(mblock);	/* Free the memory block */
 }
 
 #endif
 
 
 
+
 #if FF_FS_REENTRANT	/* Mutal exclusion */
+/*------------------------------------------------------------------------*/
+/* Definitions of Mutex                                                   */
+/*------------------------------------------------------------------------*/
 
 int testandset(volatile int *lockptr)
 {
@@ -104,9 +104,9 @@ int ff_del_syncobj (	/* 1:Function succeeded, 0:Could not delete due to an error
 
 
 /*------------------------------------------------------------------------*/
-/* Request Grant to Access the Volume                                     */
+/* Request a Grant to Access the Volume                                   */
 /*------------------------------------------------------------------------*/
-/* This function is called on entering file functions to lock the volume.
+/* This function is called on enter file functions to lock the volume.
 /  When a 0 is returned, the file function fails with FR_TIMEOUT.
 */
 
@@ -125,10 +125,11 @@ int ff_req_grant (	/* 1:Got a grant to access the volume, 0:Could not get a gran
 }
 
 
+
 /*------------------------------------------------------------------------*/
-/* Release Grant to Access the Volume                                     */
+/* Release a Grant to Access the Volume                                   */
 /*------------------------------------------------------------------------*/
-/* This function is called on leaving file functions to unlock the volume.
+/* This function is called on leave file functions to unlock the volume.
 */
 
 void ff_rel_grant (

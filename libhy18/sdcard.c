@@ -106,6 +106,7 @@ unsigned char sd_sendcmd(unsigned char cmd, unsigned long arg)
   spi_iob((crc << 1) | 0x01);
 
   // Wait for a response
+  if (cmd == 12) { spi_iob(0xFF); }
   do {
     result = spi_iob(0xFF);
   } while ((result == 0xFF) && tries--);
@@ -121,7 +122,7 @@ void sd_release(void)
 }
 
 // Attempt to read a data block, return the token
-unsigned char sd_readdata(unsigned char *buf, int len)
+unsigned char sd_readdata(unsigned char *buf, unsigned int len)
 {
   int tries = SD_MAX_TRIES;
   unsigned char token;
@@ -138,11 +139,11 @@ unsigned char sd_readdata(unsigned char *buf, int len)
 }
 
 // Attempt to write a data block, return the token
-unsigned char sd_writedata(unsigned char *buf, int len)
+unsigned char sd_writedata(unsigned char *buf, unsigned int len, unsigned char token)
 {
   int tries = SD_MAX_TRIES;
-  unsigned char token;
-  spi_iob(0xFE); // Start token
+  spi_iob(0xFF);  // Dummy byte
+  spi_iob(token); // Start token
   while (len--) { spi_iob(*buf++); }
 
   do {
@@ -195,6 +196,30 @@ unsigned char sdc_readsector(unsigned char *buf, unsigned long lba)
   }
 }
 
+unsigned char sdc_readsectors(unsigned char *buf, unsigned long lba, unsigned int count)
+{
+  int tries = SD_MAX_TRIES;
+  unsigned char result = sd_sendcmd(18, lba);
+  if (result) {
+    sd_release();
+    return result; // Error returned in R1 (bit 7 always 0)
+  } else {
+    while (count--) {
+      result = sd_readdata(buf, SD_SECTOR_SIZE);
+      buf += SD_SECTOR_SIZE;
+      if (result != 0xFE) {
+        sd_release();
+        return result | 0x80; // Error token reading data (bit 7 also 0, so we distinguish it)
+      }
+    }
+
+    sd_sendcmd(12, 0); // Stop transmission
+    while (!spi_iob(0xFF) && tries--); // Busy wait
+    sd_release();
+    return 0;
+  }
+}
+
 // Write one sector
 //    00h on success
 //  < 80h on R1 error
@@ -208,13 +233,39 @@ unsigned char sdc_writesector(unsigned char *buf, unsigned long lba)
     sd_release();
     return result; // Error returned in R1 (bit 7 always 0)
   } else {
-    result = sd_writedata(buf, SD_SECTOR_SIZE);
+    result = sd_writedata(buf, SD_SECTOR_SIZE, 0xFE);
     sd_release();
     if ((result & 0x1F) == 0x05) {
       return 0; // Success
     } else {
       return result | 0x80; // Error token writing data
     }
+  }
+}
+
+unsigned char sdc_writesectors(unsigned char *buf, unsigned long lba, unsigned int count)
+{
+  int tries = SD_MAX_TRIES;
+  unsigned char result = sd_sendcmd(25, lba);
+  if (result) {
+    sd_release();
+    return result; // Error returned in R1 (bit 7 always 0)
+  } else {
+    while (count--) {
+      result = sd_writedata(buf, SD_SECTOR_SIZE, 0xFC);
+      buf += SD_SECTOR_SIZE;
+      if ((result & 0x1F) != 0x05) {
+        sd_release();
+        return result | 0x80; // Error token writing data
+      }
+    }
+
+    spi_iob(0xFF);
+    spi_iob(0xFD); // Stop transmission
+    spi_iob(0xFF);
+    while (!spi_iob(0xFF) && tries--); // Busy wait
+    sd_release();
+    return 0; // Success
   }
 }
 

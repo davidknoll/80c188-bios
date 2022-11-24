@@ -30,12 +30,8 @@ DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count)
 	if (pdrv > 0) { return RES_PARERR; }
 	if (!sdc_inited) { return RES_NOTRDY; }
 
-	while (count--) {
-		if (sdc_readsector(buff, sector)) {
-			return RES_ERROR;
-		}
-		buff += SD_SECTOR_SIZE;
-		sector++;
+	if (sdc_readsectors(buff, sector, count)) {
+		return RES_ERROR;
 	}
 	return RES_OK;
 }
@@ -45,16 +41,12 @@ DRESULT disk_write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count)
 	if (pdrv > 0) { return RES_PARERR; }
 	if (!sdc_inited) { return RES_NOTRDY; }
 
-	while (count--) {
-		if (sdc_writesector((unsigned char *) buff, sector)) {
-			if (disk_status(pdrv) & STA_PROTECT) {
-				return RES_WRPRT;
-			} else {
-				return RES_ERROR;
-			}
+	if (sdc_writesectors((unsigned char *) buff, sector, count)) {
+		if (disk_status(pdrv) & STA_PROTECT) {
+			return RES_WRPRT;
+		} else {
+			return RES_ERROR;
 		}
-		buff += SD_SECTOR_SIZE;
-		sector++;
 	}
 	return RES_OK;
 }

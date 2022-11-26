@@ -1,8 +1,8 @@
 SRCS=command.c font.c graphics.c sdcard.c spi.c term.c text.c
 HDRS=hy18.h ..\c\ioports.h
-CFLAGS=-1 -I..\c -I.
+CFLAGS=-1 -I..\c -I. -I..\fatfs
 
-all: hy18_mc.lib hy18_mt.lib hellolib.hex hellosd.hex
+all: hy18_mc.lib hy18_mt.lib hellolib.hex hellosd.hex testcard.hex
 
 clean:
 	del *.obj *.lib font.c *.com *.map *.hex
@@ -35,6 +35,9 @@ hellolib.com: ..\c\crt0ram.obj hellolib.obj hy18_mt.lib
 
 hellosd.com: ..\c\crt0ram.obj hellosd.obj hy18_mt.lib
 	tlink /t /m ..\c\crt0ram.obj hellosd.obj ..\c\iofunc.obj, hellosd.com, hellosd.map, ct.lib hy18_mt.lib
+
+testcard.com: ..\c\crt0ram.obj testcard.obj hy18_mt.lib ..\fatfs\fatfs_mt.lib
+	tlink /t /m ..\c\crt0ram.obj testcard.obj ..\c\iofunc.obj, testcard.com, testcard.map, ct.lib hy18_mt.lib ..\fatfs\fatfs_mt.lib
 
 .com.hex:
 	srec_cat -Output $@ -Intel --address-length=3 $< -Binary -offset 0x10100 -execution_start_address 0x10000100
